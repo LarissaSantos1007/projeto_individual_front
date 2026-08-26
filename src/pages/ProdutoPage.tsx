@@ -18,7 +18,6 @@ interface Categoria {
   nome: string;
 }
 
-// PRODUTOS PRÉ-CADASTRADOS
 const PRODUTOS_INICIAIS: Produto[] = [
   {
     id_produto: 1,
@@ -100,7 +99,6 @@ const ProdutoPage: React.FC = () => {
     status: 'ATIVO' as 'ATIVO' | 'INATIVO',
   });
 
-  // Tenta carregar do backend, se falhar usa os dados iniciais
   const loadData = async () => {
     setLoading(true);
     try {
@@ -127,6 +125,29 @@ const ProdutoPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // VALIDAÇÕES ANTES DE ENVIAR
+    if (formData.preco_unitario <= 0) {
+      alert('Preço deve ser maior que zero!');
+      return;
+    }
+    if (formData.quantidade_disponivel < 0) {
+      alert('Quantidade não pode ser negativa!');
+      return;
+    }
+    if (formData.id_categoria === 0) {
+      alert('Selecione uma categoria!');
+      return;
+    }
+    if (!formData.codigo.trim()) {
+      alert('Código é obrigatório!');
+      return;
+    }
+    if (!formData.nome.trim()) {
+      alert('Nome é obrigatório!');
+      return;
+    }
+
     try {
       if (editing) {
         await api.put(`/produtos/${editing.id_produto}`, formData);
@@ -149,7 +170,6 @@ const ProdutoPage: React.FC = () => {
       });
       await loadData();
     } catch (error) {
-      // Se falhar, salva localmente
       if (editing) {
         setProdutos(produtos.map(p => p.id_produto === editing.id_produto ? { ...formData, id_produto: editing.id_produto } : p));
         alert('Produto atualizado localmente!');
@@ -195,7 +215,6 @@ const ProdutoPage: React.FC = () => {
         alert('Produto excluído com sucesso!');
         await loadData();
       } catch (error) {
-        // Se falhar, exclui localmente
         setProdutos(produtos.filter(p => p.id_produto !== id));
         alert('Produto excluído localmente!');
       }
@@ -300,14 +319,16 @@ const ProdutoPage: React.FC = () => {
               </div>
             </div>
 
+            {/* CAMPO PREÇO CORRIGIDO */}
             <div style={styles.formRow2}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Preço Unitário (R$) *</label>
                 <input 
                   type="number" 
                   step="0.01" 
+                  min="0.01"
                   required 
-                  value={formData.preco_unitario} 
+                  value={formData.preco_unitario || ''} 
                   onChange={(e) => setFormData({...formData, preco_unitario: parseFloat(e.target.value) || 0})} 
                   style={styles.input} 
                   placeholder="0,00" 
@@ -318,6 +339,7 @@ const ProdutoPage: React.FC = () => {
                 <input 
                   type="number" 
                   required 
+                  min="0"
                   value={formData.quantidade_disponivel} 
                   onChange={(e) => setFormData({...formData, quantidade_disponivel: parseInt(e.target.value) || 0})} 
                   style={styles.input} 
@@ -331,6 +353,7 @@ const ProdutoPage: React.FC = () => {
               <input 
                 type="number" 
                 required 
+                min="0"
                 value={formData.quantidade_minima} 
                 onChange={(e) => setFormData({...formData, quantidade_minima: parseInt(e.target.value) || 0})} 
                 style={styles.input} 
