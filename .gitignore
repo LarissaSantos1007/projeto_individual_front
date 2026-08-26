@@ -1,0 +1,17 @@
+# Dependências
+node_modules/
+dist/
+dist-ssr/
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
