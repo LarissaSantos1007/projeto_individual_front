@@ -50,17 +50,19 @@ const CategoriaPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const res = await api.get('/categorias');
-        if (res.data && res.data.length > 0) {
-          setCategorias(res.data);
-        }
-      } catch (error) {
-        console.log('Usando dados locais');
+  // FUNÇÃO PARA RECARREGAR OS DADOS
+  const loadData = async () => {
+    try {
+      const res = await api.get('/categorias');
+      if (res.data && res.data.length > 0) {
+        setCategorias(res.data);
       }
-    };
+    } catch (error) {
+      console.log('Usando dados locais');
+    }
+  };
+
+  useEffect(() => {
     setTimeout(loadData, 100);
   }, []);
 
@@ -73,33 +75,40 @@ const CategoriaPage: React.FC = () => {
 
     setIsSubmitting(true);
 
+    let novaCategoria: Categoria;
+
     if (editing) {
+      // ATUALIZA LOCALMENTE
+      novaCategoria = { ...formData, id_categoria: editing.id_categoria };
       setCategorias(categorias.map(c => 
-        c.id_categoria === editing.id_categoria 
-          ? { ...formData, id_categoria: editing.id_categoria } 
-          : c
+        c.id_categoria === editing.id_categoria ? novaCategoria : c
       ));
       toast.success('Categoria atualizada! ✅');
+      
+      try {
+        await api.put(`/categorias/${editing.id_categoria}`, formData);
+        await loadData(); // RECARREGA PARA SINCRONIZAR
+      } catch (error) {
+        console.log('Não sincronizado');
+      }
     } else {
-      const nova = { ...formData, id_categoria: Date.now() };
-      setCategorias([...categorias, nova]);
+      // CRIA NOVA CATEGORIA
+      novaCategoria = { ...formData, id_categoria: Date.now() };
+      setCategorias([...categorias, novaCategoria]); // ← ADICIONA NA LISTA
       toast.success('Categoria criada! ✅');
+      
+      try {
+        const res = await api.post('/categorias', formData);
+        await loadData(); // RECARREGA PARA SINCRONIZAR
+      } catch (error) {
+        console.log('Não sincronizado');
+      }
     }
     
     setShowForm(false);
     setEditing(null);
     setFormData({ nome: '', descricao: '' });
     setIsSubmitting(false);
-
-    try {
-      if (editing) {
-        await api.put(`/categorias/${editing.id_categoria}`, formData);
-      } else {
-        await api.post('/categorias', formData);
-      }
-    } catch (error) {
-      console.log('Não sincronizado');
-    }
   };
 
   const handleEdit = (categoria: Categoria) => {
@@ -111,11 +120,16 @@ const CategoriaPage: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm('Tem certeza que deseja excluir esta categoria?')) {
       setCategorias(categorias.filter(c => c.id_categoria !== id));
       toast.success('Categoria excluída! 🗑️');
-      api.delete(`/categorias/${id}`).catch(() => {});
+      try {
+        await api.delete(`/categorias/${id}`);
+        await loadData(); // RECARREGA PARA SINCRONIZAR
+      } catch (error) {
+        console.log('Não sincronizado');
+      }
     }
   };
 

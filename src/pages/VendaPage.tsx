@@ -58,24 +58,25 @@ const VendaPage: React.FC = () => {
     valor_total: 0,
   });
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [vendasRes, movRes] = await Promise.all([
-          api.get('/vendas'),
-          api.get('/movimentacoes'),
-        ]);
-        if (vendasRes.data && vendasRes.data.length > 0) {
-          setVendas(vendasRes.data);
-        }
-        const movs = (movRes.data || []).filter((m: any) => m.tipo === 'RETIRADA' && m.motivo === 'VENDA');
-        if (movs.length > 0) {
-          setMovimentacoes(movs);
-        }
-      } catch (error) {
-        console.log('Usando dados de exemplo');
+  const loadData = async () => {
+    try {
+      const [vendasRes, movRes] = await Promise.all([
+        api.get('/vendas'),
+        api.get('/movimentacoes'),
+      ]);
+      if (vendasRes.data && vendasRes.data.length > 0) {
+        setVendas(vendasRes.data);
       }
-    };
+      const movs = (movRes.data || []).filter((m: any) => m.tipo === 'RETIRADA' && m.motivo === 'VENDA');
+      if (movs.length > 0) {
+        setMovimentacoes(movs);
+      }
+    } catch (error) {
+      console.log('Usando dados de exemplo');
+    }
+  };
+
+  useEffect(() => {
     setTimeout(loadData, 100);
   }, []);
 
@@ -95,7 +96,7 @@ const VendaPage: React.FC = () => {
 
     const mov = movimentacoes.find(m => m.id_movimentacao === formData.id_movimentacao);
     const novaVenda: Venda = {
-      id_venda: Date.now(),
+      id_venda: vendas.length + 1, // ← ID SEQUENCIAL
       id_movimentacao: formData.id_movimentacao,
       preco_unitario_praticado: formData.preco_unitario_praticado,
       quantidade: formData.quantidade,
@@ -112,6 +113,7 @@ const VendaPage: React.FC = () => {
 
     try {
       await api.post('/vendas', formData);
+      await loadData();
     } catch (error) {
       console.log('Não sincronizado');
     }

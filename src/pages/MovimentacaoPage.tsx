@@ -69,23 +69,24 @@ const MovimentacaoPage: React.FC = () => {
     observacao: '',
   });
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [movRes, prodRes] = await Promise.all([
-          api.get('/movimentacoes'),
-          api.get('/produtos'),
-        ]);
-        if (movRes.data && movRes.data.length > 0) {
-          setMovimentacoes(movRes.data);
-        }
-        if (prodRes.data && prodRes.data.length > 0) {
-          setProdutos(prodRes.data);
-        }
-      } catch (error) {
-        console.log('Usando dados de exemplo');
+  const loadData = async () => {
+    try {
+      const [movRes, prodRes] = await Promise.all([
+        api.get('/movimentacoes'),
+        api.get('/produtos'),
+      ]);
+      if (movRes.data && movRes.data.length > 0) {
+        setMovimentacoes(movRes.data);
       }
-    };
+      if (prodRes.data && prodRes.data.length > 0) {
+        setProdutos(prodRes.data);
+      }
+    } catch (error) {
+      console.log('Usando dados de exemplo');
+    }
+  };
+
+  useEffect(() => {
     setTimeout(loadData, 100);
   }, []);
 
@@ -99,7 +100,7 @@ const MovimentacaoPage: React.FC = () => {
     setIsSubmitting(true);
 
     const produto = produtos.find(p => p.id_produto === formData.id_produto);
-    const novaMov: Movimentacao = {
+    const novaMov = {
       id_movimentacao: Date.now(),
       id_produto: formData.id_produto,
       tipo: formData.tipo,
@@ -121,6 +122,7 @@ const MovimentacaoPage: React.FC = () => {
         ...formData,
         data: new Date().toISOString(),
       });
+      await loadData();
     } catch (error) {
       console.log('Não sincronizado');
     }

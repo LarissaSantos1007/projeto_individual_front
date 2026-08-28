@@ -68,24 +68,24 @@ const ProdutoPage: React.FC = () => {
     status: 'ATIVO' as 'ATIVO' | 'INATIVO',
   });
 
-  // CARREGA EM SEGUNDO PLANO
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [prodRes, catRes] = await Promise.all([
-          api.get('/produtos'),
-          api.get('/categorias'),
-        ]);
-        if (prodRes.data && prodRes.data.length > 0) {
-          setProdutos(prodRes.data);
-        }
-        if (catRes.data && catRes.data.length > 0) {
-          setCategorias(catRes.data);
-        }
-      } catch (error) {
-        console.log('Usando dados locais');
+  const loadData = async () => {
+    try {
+      const [prodRes, catRes] = await Promise.all([
+        api.get('/produtos'),
+        api.get('/categorias'),
+      ]);
+      if (prodRes.data && prodRes.data.length > 0) {
+        setProdutos(prodRes.data);
       }
-    };
+      if (catRes.data && catRes.data.length > 0) {
+        setCategorias(catRes.data);
+      }
+    } catch (error) {
+      console.log('Usando dados locais');
+    }
+  };
+
+  useEffect(() => {
     setTimeout(loadData, 100);
   }, []);
 
@@ -98,31 +98,34 @@ const ProdutoPage: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // SALVA LOCAL INSTANTANEAMENTE
     if (editing) {
-      setProdutos(produtos.map(p => p.id_produto === editing.id_produto ? { ...formData, id_produto: editing.id_produto } : p));
+      const produtoAtualizado = { ...formData, id_produto: editing.id_produto };
+      setProdutos(produtos.map(p => p.id_produto === editing.id_produto ? produtoAtualizado : p));
       toast.success('Produto atualizado! ✅');
+      
+      try {
+        await api.put(`/produtos/${editing.id_produto}`, formData);
+        await loadData();
+      } catch (error) {
+        console.log('Não sincronizado');
+      }
     } else {
-      const novo = { ...formData, id_produto: Date.now() };
-      setProdutos([...produtos, novo]);
+      const novoProduto = { ...formData, id_produto: Date.now() };
+      setProdutos([...produtos, novoProduto]);
       toast.success('Produto criado! ✅');
+      
+      try {
+        await api.post('/produtos', formData);
+        await loadData();
+      } catch (error) {
+        console.log('Não sincronizado');
+      }
     }
     
     setShowForm(false);
     setEditing(null);
     setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' });
     setIsSubmitting(false);
-
-    // TENTA SALVAR NO BACKEND
-    try {
-      if (editing) {
-        await api.put(`/produtos/${editing.id_produto}`, formData);
-      } else {
-        await api.post('/produtos', formData);
-      }
-    } catch (error) {
-      console.log('Não sincronizado');
-    }
   };
 
   const handleEdit = (produto: Produto) => {
@@ -140,11 +143,16 @@ const ProdutoPage: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm('Tem certeza que deseja excluir este produto?')) {
       setProdutos(produtos.filter(p => p.id_produto !== id));
       toast.success('Produto excluído! 🗑️');
-      api.delete(`/produtos/${id}`).catch(() => {});
+      try {
+        await api.delete(`/produtos/${id}`);
+        await loadData();
+      } catch (error) {
+        console.log('Não sincronizado');
+      }
     }
   };
 
