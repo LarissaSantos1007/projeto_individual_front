@@ -1,37 +1,34 @@
 import React from 'react';
 
 interface NavbarProps {
-  activePage: string;
-  setActivePage: (page: string) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ activePage, setActivePage }) => {
-  const navItems = [
-    { id: 'dashboard', label: 'Visão Geral', icon: '📊' },
-    { id: 'produtos', label: 'Produtos', icon: '📦' },
-    { id: 'reposicao', label: 'Reposição', icon: '🔄' },
-    { id: 'cadastro', label: 'Cadastro', icon: '➕' },
+const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
+  const tabs = [
+    { id: 'dashboard', label: '📊 Dashboard' },
+    { id: 'produtos', label: '📦 Produtos' },
+    { id: 'categorias', label: '📂 Categorias' },
+    { id: 'movimentacoes', label: '🔄 Movimentações' },
+    { id: 'vendas', label: '💰 Vendas' },
   ];
 
   return (
     <nav style={styles.nav}>
-      <div style={styles.navContainer}>
-        <div style={styles.logo}>
-          <span style={styles.logoIcon}>🏪</span>
-          <h1 style={styles.logoTitle}>Controle de Estoque</h1>
-        </div>
-        <div style={styles.navLinks}>
-          {navItems.map((item) => (
+      <div style={styles.container}>
+        <h1 style={styles.logo}>🏪 Controle de Estoque</h1>
+        <div style={styles.tabs}>
+          {tabs.map((tab) => (
             <button
-              key={item.id}
-              onClick={() => setActivePage(item.id)}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
               style={{
-                ...styles.navLink,
-                ...(activePage === item.id ? styles.navLinkActive : {}),
+                ...styles.tab,
+                ...(activeTab === tab.id ? styles.tabActive : {}),
               }}
             >
-              <span style={styles.navIcon}>{item.icon}</span>
-              {item.label}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -50,7 +47,7 @@ const styles = {
     zIndex: 1000,
     borderBottom: '3px solid #4a90d9',
   },
-  navContainer: {
+  container: {
     maxWidth: '1400px',
     margin: '0 auto',
     display: 'flex',
@@ -61,49 +58,32 @@ const styles = {
     gap: '0.5rem',
   },
   logo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-  },
-  logoIcon: {
-    fontSize: '2rem',
-  },
-  logoTitle: {
     color: '#fff',
-    fontSize: '1.4rem',
+    fontSize: '1.3rem',
     margin: 0,
     fontWeight: 700,
-    background: 'linear-gradient(135deg, #4a90d9, #6c5ce7)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
   },
-  navLinks: {
+  tabs: {
     display: 'flex',
     gap: '0.5rem',
     flexWrap: 'wrap' as const,
   },
-  navLink: {
-    color: '#a0a0b0',
-    background: 'transparent',
+  tab: {
+    padding: '0.5rem 1rem',
     border: 'none',
-    padding: '0.6rem 1.2rem',
-    borderRadius: '10px',
+    borderRadius: '8px',
     fontSize: '0.9rem',
     fontWeight: 500,
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
+    background: 'transparent',
+    color: '#a0a0b0',
     fontFamily: 'inherit',
   },
-  navLinkActive: {
+  tabActive: {
+    background: '#4a90d9',
     color: '#fff',
-    background: 'rgba(74, 144, 217, 0.2)',
-    boxShadow: '0 0 20px rgba(74, 144, 217, 0.1)',
-  },
-  navIcon: {
-    fontSize: '1.1rem',
+    boxShadow: '0 2px 8px rgba(74,144,217,0.3)',
   },
 };
 
