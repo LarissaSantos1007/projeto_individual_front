@@ -12,20 +12,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ESTILOS DO TOAST - BARRA ROSA */
+/* ESTILOS DO TOAST - COMPLETO */
 .Toastify__toast {
   border-radius: 12px !important;
   font-family: inherit !important;
+  padding: 16px 20px !important;
 }
 
+/* FUNDO DOS TOASTS */
 .Toastify__toast--success {
   background: #1a1730 !important;
-  border: 1px solid rgba(253,121,168,0.2) !important;
+  border: 1px solid rgba(253,121,168,0.25) !important;
+  box-shadow: 0 4px 20px rgba(253,121,168,0.08) !important;
 }
 
 .Toastify__toast--error {
   background: #1a1730 !important;
-  border: 1px solid rgba(255,0,0,0.2) !important;
+  border: 1px solid rgba(255,77,77,0.2) !important;
 }
 
 .Toastify__toast--info {
@@ -33,18 +36,56 @@ body {
   border: 1px solid rgba(108,92,231,0.2) !important;
 }
 
-.Toastify__progress-bar {
-  background: #fd79a8 !important;
-  height: 4px !important;
+/* ÍCONE DE SUCESSO - ROSA */
+.Toastify__toast-icon svg {
+  fill: #fd79a8 !important;
 }
 
+.Toastify__toast-icon {
+  color: #fd79a8 !important;
+}
+
+/* ÍCONE DE ERRO - VERMELHO */
+.Toastify__toast--error .Toastify__toast-icon svg {
+  fill: #ff4d4d !important;
+}
+
+/* ÍCONE DE INFO - ROXO */
+.Toastify__toast--info .Toastify__toast-icon svg {
+  fill: #a29bfe !important;
+}
+
+/* BARRA DE PROGRESSO - ROSA */
+.Toastify__progress-bar {
+  background: #fd79a8 !important;
+  height: 3px !important;
+}
+
+/* BARRA DE PROGRESSO DO ERRO */
+.Toastify__toast--error .Toastify__progress-bar {
+  background: #ff4d4d !important;
+}
+
+/* BARRA DE PROGRESSO DO INFO */
+.Toastify__toast--info .Toastify__progress-bar {
+  background: #a29bfe !important;
+}
+
+/* BOTÃO FECHAR */
 .Toastify__close-button {
   color: #fd79a8 !important;
-  opacity: 0.7 !important;
+  opacity: 0.6 !important;
 }
 
 .Toastify__close-button:hover {
   opacity: 1 !important;
+  color: #fd79a8 !important;
+}
+
+/* TEXTO DO TOAST */
+.Toastify__toast-body {
+  color: #d0d0e0 !important;
+  font-size: 0.95rem !important;
 }
 
 code {
