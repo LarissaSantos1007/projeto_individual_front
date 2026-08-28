@@ -5,17 +5,21 @@ const DADOS_EXEMPLO = {
   produtos: [
     { id: 1, nome: 'Notebook Dell', preco: 3499.90, quantidade: 15 },
     { id: 2, nome: 'Smartphone Samsung', preco: 2499.00, quantidade: 8 },
-    { id: 3, nome: 'Camiseta Polo', preco: 89.90, quantidade: 50 },
-    { id: 4, nome: 'Fone Bluetooth', preco: 199.90, quantidade: 25 },
-    { id: 5, nome: 'Monitor LG', preco: 899.90, quantidade: 3 },
-    { id: 6, nome: 'Teclado Mecânico', preco: 299.90, quantidade: 12 },
-    { id: 7, nome: 'Mouse Gamer', preco: 149.90, quantidade: 1 },
-    { id: 8, nome: 'Livro O Hobbit', preco: 79.90, quantidade: 2 },
+    { id: 3, nome: 'Monitor LG', preco: 899.90, quantidade: 3 },
+    { id: 4, nome: 'Teclado Mecânico', preco: 299.90, quantidade: 12 },
+    { id: 5, nome: 'Mouse Gamer', preco: 149.90, quantidade: 1 },
+    { id: 6, nome: 'Fone Bluetooth', preco: 199.90, quantidade: 25 },
+    { id: 7, nome: 'Placa de Vídeo NVIDIA', preco: 2499.90, quantidade: 0 },
+    { id: 8, nome: 'Processador Intel i7', preco: 2199.90, quantidade: 0 },
+    { id: 9, nome: 'Fonte Corsair 500W', preco: 349.90, quantidade: 0 },
+    { id: 10, nome: 'SSD Kingston 480GB', preco: 279.90, quantidade: 4 },
+    { id: 11, nome: 'Memória RAM HyperX', preco: 399.90, quantidade: 2 },
+    { id: 12, nome: 'Roteador TP-Link', preco: 199.90, quantidade: 6 },
   ],
   categorias: [
-    { id: 1, nome: 'Eletrônicos' },
-    { id: 2, nome: 'Roupas' },
-    { id: 3, nome: 'Livros' },
+    { id: 1, nome: 'Hardware' },
+    { id: 2, nome: 'Periféricos' },
+    { id: 3, nome: 'Armazenamento' },
   ],
 };
 
@@ -52,7 +56,7 @@ const Dashboard: React.FC = () => {
           vendas: 3,
           valorTotal: valorTotal,
         });
-        setUltimosProdutos(dadosProdutos.slice(0, 5));
+        setUltimosProdutos(dadosProdutos.slice(0, 8));
       } catch (error) {
         const valorTotal = DADOS_EXEMPLO.produtos.reduce((sum, p) => sum + p.preco * p.quantidade, 0);
         setStats({

@@ -50,7 +50,6 @@ const CategoriaPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // FUNÇÃO PARA RECARREGAR OS DADOS
   const loadData = async () => {
     try {
       const res = await api.get('/categorias');
@@ -75,31 +74,28 @@ const CategoriaPage: React.FC = () => {
 
     setIsSubmitting(true);
 
-    let novaCategoria: Categoria;
-
     if (editing) {
-      // ATUALIZA LOCALMENTE
-      novaCategoria = { ...formData, id_categoria: editing.id_categoria };
+      const categoriaAtualizada = { ...formData, id_categoria: editing.id_categoria };
       setCategorias(categorias.map(c => 
-        c.id_categoria === editing.id_categoria ? novaCategoria : c
+        c.id_categoria === editing.id_categoria ? categoriaAtualizada : c
       ));
       toast.success('Categoria atualizada! ✅');
       
       try {
         await api.put(`/categorias/${editing.id_categoria}`, formData);
-        await loadData(); // RECARREGA PARA SINCRONIZAR
+        await loadData();
       } catch (error) {
         console.log('Não sincronizado');
       }
     } else {
-      // CRIA NOVA CATEGORIA
-      novaCategoria = { ...formData, id_categoria: Date.now() };
-      setCategorias([...categorias, novaCategoria]); // ← ADICIONA NA LISTA
+      const novoId = categorias.length > 0 ? Math.max(...categorias.map(c => c.id_categoria || 0)) + 1 : 1;
+      const novaCategoria = { ...formData, id_categoria: novoId };
+      setCategorias([...categorias, novaCategoria]);
       toast.success('Categoria criada! ✅');
       
       try {
-        const res = await api.post('/categorias', formData);
-        await loadData(); // RECARREGA PARA SINCRONIZAR
+        await api.post('/categorias', formData);
+        await loadData();
       } catch (error) {
         console.log('Não sincronizado');
       }
@@ -126,7 +122,7 @@ const CategoriaPage: React.FC = () => {
       toast.success('Categoria excluída! 🗑️');
       try {
         await api.delete(`/categorias/${id}`);
-        await loadData(); // RECARREGA PARA SINCRONIZAR
+        await loadData();
       } catch (error) {
         console.log('Não sincronizado');
       }

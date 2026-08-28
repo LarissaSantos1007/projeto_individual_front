@@ -100,8 +100,9 @@ const MovimentacaoPage: React.FC = () => {
     setIsSubmitting(true);
 
     const produto = produtos.find(p => p.id_produto === formData.id_produto);
+    const novoId = movimentacoes.length > 0 ? Math.max(...movimentacoes.map(m => m.id_movimentacao || 0)) + 1 : 1;
     const novaMov = {
-      id_movimentacao: Date.now(),
+      id_movimentacao: novoId,
       id_produto: formData.id_produto,
       tipo: formData.tipo,
       quantidade: formData.quantidade,

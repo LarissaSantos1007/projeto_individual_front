@@ -95,8 +95,9 @@ const VendaPage: React.FC = () => {
     setIsSubmitting(true);
 
     const mov = movimentacoes.find(m => m.id_movimentacao === formData.id_movimentacao);
-    const novaVenda: Venda = {
-      id_venda: vendas.length + 1, // ← ID SEQUENCIAL
+    const novoId = vendas.length > 0 ? Math.max(...vendas.map(v => v.id_venda || 0)) + 1 : 1;
+    const novaVenda = {
+      id_venda: novoId,
       id_movimentacao: formData.id_movimentacao,
       preco_unitario_praticado: formData.preco_unitario_praticado,
       quantidade: formData.quantidade,

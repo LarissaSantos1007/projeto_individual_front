@@ -21,31 +21,25 @@ interface Categoria {
 
 const PRODUTOS_EXEMPLO: Produto[] = [
   { id_produto: 1, codigo: 'PROD-001', nome: 'Notebook Dell Inspiron', descricao: '15.6 polegadas, 8GB RAM, 256GB SSD, Intel i5', id_categoria: 1, preco_unitario: 3499.90, quantidade_disponivel: 15, quantidade_minima: 5, status: 'ATIVO' },
-  { id_produto: 2, codigo: 'PROD-002', nome: 'Smartphone Samsung Galaxy S23', descricao: '6.5 polegadas, 128GB, 5G, tela AMOLED', id_categoria: 22, preco_unitario: 2499.00, quantidade_disponivel: 8, quantidade_minima: 3, status: 'ATIVO' },
-  { id_produto: 3, codigo: 'PROD-003', nome: 'Monitor LG 24"', descricao: '24 polegadas, Full HD, 75Hz, HDMI, DisplayPort', id_categoria: 11, preco_unitario: 899.90, quantidade_disponivel: 3, quantidade_minima: 6, status: 'ATIVO' },
-  { id_produto: 4, codigo: 'PROD-004', nome: 'Teclado Mecânico Redragon', descricao: 'Switches blue, RGB, ABNT2, 60%', id_categoria: 4, preco_unitario: 299.90, quantidade_disponivel: 12, quantidade_minima: 4, status: 'ATIVO' },
-  { id_produto: 5, codigo: 'PROD-005', nome: 'Mouse Gamer Logitech', descricao: '1600 DPI, 7 botões programáveis, RGB, wireless', id_categoria: 4, preco_unitario: 149.90, quantidade_disponivel: 1, quantidade_minima: 3, status: 'ATIVO' },
-  { id_produto: 6, codigo: 'PROD-006', nome: 'Placa Mãe ASUS ROG', descricao: 'Socket LGA1200, DDR4, HDMI, PCIe 4.0', id_categoria: 8, preco_unitario: 799.90, quantidade_disponivel: 0, quantidade_minima: 2, status: 'ATIVO' },
-  { id_produto: 7, codigo: 'PROD-007', nome: 'Fonte Corsair 500W', descricao: 'Fonte ATX, 80 Plus Bronze, modular', id_categoria: 9, preco_unitario: 349.90, quantidade_disponivel: 0, quantidade_minima: 3, status: 'ATIVO' },
-  { id_produto: 8, codigo: 'PROD-008', nome: 'SSD Kingston 480GB', descricao: 'SSD SATA III, leitura 500MB/s, 2.5 polegadas', id_categoria: 5, preco_unitario: 279.90, quantidade_disponivel: 4, quantidade_minima: 4, status: 'ATIVO' },
-  { id_produto: 9, codigo: 'PROD-009', nome: 'Memória RAM HyperX 16GB', descricao: 'DDR4, 3200MHz, RGB, 2x8GB', id_categoria: 7, preco_unitario: 399.90, quantidade_disponivel: 2, quantidade_minima: 3, status: 'ATIVO' },
-  { id_produto: 10, codigo: 'PROD-010', nome: 'Headset Gamer HyperX', descricao: 'Som surround 7.1, microfone removível, USB', id_categoria: 15, preco_unitario: 459.90, quantidade_disponivel: 0, quantidade_minima: 2, status: 'ATIVO' },
-  { id_produto: 11, codigo: 'PROD-011', nome: 'Roteador TP-Link AC1200', descricao: 'Wi-Fi Dual Band, 4 antenas, porta Gigabit', id_categoria: 17, preco_unitario: 199.90, quantidade_disponivel: 6, quantidade_minima: 3, status: 'ATIVO' },
-  { id_produto: 12, codigo: 'PROD-012', nome: 'Placa de Vídeo NVIDIA RTX 3060', descricao: '12GB GDDR6, Ray Tracing, DLSS', id_categoria: 26, preco_unitario: 2499.90, quantidade_disponivel: 0, quantidade_minima: 2, status: 'ATIVO' },
+  { id_produto: 2, codigo: 'PROD-002', nome: 'Smartphone Samsung Galaxy S23', descricao: '6.5 polegadas, 128GB, 5G, tela AMOLED', id_categoria: 1, preco_unitario: 2499.00, quantidade_disponivel: 8, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 3, codigo: 'PROD-003', nome: 'Monitor LG 24"', descricao: '24 polegadas, Full HD, 75Hz, HDMI, DisplayPort', id_categoria: 1, preco_unitario: 899.90, quantidade_disponivel: 3, quantidade_minima: 6, status: 'ATIVO' },
+  { id_produto: 4, codigo: 'PROD-004', nome: 'Teclado Mecânico Redragon', descricao: 'Switches blue, RGB, ABNT2, 60%', id_categoria: 1, preco_unitario: 299.90, quantidade_disponivel: 12, quantidade_minima: 4, status: 'ATIVO' },
+  { id_produto: 5, codigo: 'PROD-005', nome: 'Mouse Gamer Logitech', descricao: '1600 DPI, 7 botões programáveis, RGB, wireless', id_categoria: 1, preco_unitario: 149.90, quantidade_disponivel: 1, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 6, codigo: 'PROD-006', nome: 'Placa Mãe ASUS ROG', descricao: 'Socket LGA1200, DDR4, HDMI, PCIe 4.0', id_categoria: 1, preco_unitario: 799.90, quantidade_disponivel: 0, quantidade_minima: 2, status: 'ATIVO' },
+  { id_produto: 7, codigo: 'PROD-007', nome: 'Fonte Corsair 500W', descricao: 'Fonte ATX, 80 Plus Bronze, modular', id_categoria: 1, preco_unitario: 349.90, quantidade_disponivel: 0, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 8, codigo: 'PROD-008', nome: 'SSD Kingston 480GB', descricao: 'SSD SATA III, leitura 500MB/s, 2.5 polegadas', id_categoria: 1, preco_unitario: 279.90, quantidade_disponivel: 4, quantidade_minima: 4, status: 'ATIVO' },
+  { id_produto: 9, codigo: 'PROD-009', nome: 'Memória RAM HyperX 16GB', descricao: 'DDR4, 3200MHz, RGB, 2x8GB', id_categoria: 1, preco_unitario: 399.90, quantidade_disponivel: 2, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 10, codigo: 'PROD-010', nome: 'Headset Gamer HyperX', descricao: 'Som surround 7.1, microfone removível, USB', id_categoria: 1, preco_unitario: 459.90, quantidade_disponivel: 0, quantidade_minima: 2, status: 'ATIVO' },
+  { id_produto: 11, codigo: 'PROD-011', nome: 'Roteador TP-Link AC1200', descricao: 'Wi-Fi Dual Band, 4 antenas, porta Gigabit', id_categoria: 1, preco_unitario: 199.90, quantidade_disponivel: 6, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 12, codigo: 'PROD-012', nome: 'Placa de Vídeo NVIDIA RTX 3060', descricao: '12GB GDDR6, Ray Tracing, DLSS', id_categoria: 1, preco_unitario: 2499.90, quantidade_disponivel: 0, quantidade_minima: 2, status: 'ATIVO' },
+  { id_produto: 13, codigo: 'PROD-013', nome: 'Processador Intel i7-12700K', descricao: '12 núcleos, 20 threads, 5.0GHz', id_categoria: 1, preco_unitario: 2199.90, quantidade_disponivel: 0, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 14, codigo: 'PROD-014', nome: 'Webcam Logitech C920', descricao: 'Full HD 1080p, microfone estéreo, autofoco', id_categoria: 1, preco_unitario: 299.90, quantidade_disponivel: 5, quantidade_minima: 2, status: 'ATIVO' },
+  { id_produto: 15, codigo: 'PROD-015', nome: 'Switch TP-Link 8 Portas', descricao: 'Gigabit, 8 portas, metal', id_categoria: 1, preco_unitario: 159.90, quantidade_disponivel: 0, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 16, codigo: 'PROD-016', nome: 'Fone Bluetooth JBL', descricao: 'Cancelamento de ruído, bateria 20h, carregamento rápido', id_categoria: 1, preco_unitario: 199.90, quantidade_disponivel: 25, quantidade_minima: 8, status: 'ATIVO' },
 ];
 
 const CATEGORIAS_EXEMPLO: Categoria[] = [
-  { id_categoria: 1, nome: 'Hardware' },
-  { id_categoria: 4, nome: 'Periféricos' },
-  { id_categoria: 5, nome: 'Armazenamento' },
-  { id_categoria: 7, nome: 'Memórias' },
-  { id_categoria: 8, nome: 'Placas Mãe' },
-  { id_categoria: 9, nome: 'Fontes de Alimentação' },
-  { id_categoria: 11, nome: 'Monitores' },
-  { id_categoria: 15, nome: 'Headphones' },
-  { id_categoria: 17, nome: 'Roteadores' },
-  { id_categoria: 22, nome: 'Smartphones' },
-  { id_categoria: 26, nome: 'Placas de Vídeo' },
+  { id_categoria: 1, nome: 'Tecnologia' },
 ];
 
 const ProdutoPage: React.FC = () => {
@@ -110,7 +104,8 @@ const ProdutoPage: React.FC = () => {
         console.log('Não sincronizado');
       }
     } else {
-      const novoProduto = { ...formData, id_produto: Date.now() };
+      const novoId = produtos.length > 0 ? Math.max(...produtos.map(p => p.id_produto || 0)) + 1 : 1;
+      const novoProduto = { ...formData, id_produto: novoId };
       setProdutos([...produtos, novoProduto]);
       toast.success('Produto criado! ✅');
       
