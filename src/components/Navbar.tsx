@@ -8,8 +8,8 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'dashboard', label: '📊 Dashboard' },
-    { id: 'produtos', label: '📦 Produtos' },
     { id: 'categorias', label: '📂 Categorias' },
+    { id: 'produtos', label: '📦 Produtos' },
     { id: 'movimentacoes', label: '🔄 Movimentações' },
     { id: 'vendas', label: '💰 Vendas' },
   ];
