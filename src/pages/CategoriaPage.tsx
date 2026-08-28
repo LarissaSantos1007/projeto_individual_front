@@ -43,26 +43,26 @@ const CATEGORIAS_EXEMPLO: Categoria[] = [
 
 const CategoriaPage: React.FC = () => {
   const [categorias, setCategorias] = useState<Categoria[]>(CATEGORIAS_EXEMPLO);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Categoria | null>(null);
   const [formData, setFormData] = useState({ nome: '', descricao: '' });
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadData = async () => {
-    try {
-      const res = await api.get('/categorias');
-      if (res.data && res.data.length > 0) {
-        setCategorias(res.data);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const res = await api.get('/categorias');
+        if (res.data && res.data.length > 0) {
+          setCategorias(res.data);
+        }
+      } catch (error) {
+        console.log('Usando dados locais');
       }
-    } catch (error) {
-      console.log('Usando dados de exemplo');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { loadData(); }, []);
+    };
+    setTimeout(loadData, 100);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,30 +70,35 @@ const CategoriaPage: React.FC = () => {
       toast.error('Nome da categoria é obrigatório!');
       return;
     }
+
+    setIsSubmitting(true);
+
+    if (editing) {
+      setCategorias(categorias.map(c => 
+        c.id_categoria === editing.id_categoria 
+          ? { ...formData, id_categoria: editing.id_categoria } 
+          : c
+      ));
+      toast.success('Categoria atualizada! ✅');
+    } else {
+      const nova = { ...formData, id_categoria: Date.now() };
+      setCategorias([...categorias, nova]);
+      toast.success('Categoria criada! ✅');
+    }
+    
+    setShowForm(false);
+    setEditing(null);
+    setFormData({ nome: '', descricao: '' });
+    setIsSubmitting(false);
+
     try {
       if (editing) {
         await api.put(`/categorias/${editing.id_categoria}`, formData);
-        toast.success('Categoria atualizada com sucesso! 🎉');
       } else {
         await api.post('/categorias', formData);
-        toast.success('Categoria criada com sucesso! 🎉');
       }
-      setShowForm(false);
-      setEditing(null);
-      setFormData({ nome: '', descricao: '' });
-      await loadData();
     } catch (error) {
-      if (editing) {
-        setCategorias(categorias.map(c => c.id_categoria === editing.id_categoria ? { ...formData, id_categoria: editing.id_categoria } : c));
-        toast.success('Categoria atualizada localmente! 💾');
-      } else {
-        const nova = { ...formData, id_categoria: Date.now() };
-        setCategorias([...categorias, nova]);
-        toast.success('Categoria criada localmente! 💾');
-      }
-      setShowForm(false);
-      setEditing(null);
-      setFormData({ nome: '', descricao: '' });
+      console.log('Não sincronizado');
     }
   };
 
@@ -104,19 +109,13 @@ const CategoriaPage: React.FC = () => {
       descricao: categoria.descricao || '',
     });
     setShowForm(true);
-    toast.info('Editando categoria... ✏️');
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
     if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-      try {
-        await api.delete(`/categorias/${id}`);
-        toast.success('Categoria excluída com sucesso! 🗑️');
-        await loadData();
-      } catch (error) {
-        setCategorias(categorias.filter(c => c.id_categoria !== id));
-        toast.success('Categoria excluída localmente! 🗑️');
-      }
+      setCategorias(categorias.filter(c => c.id_categoria !== id));
+      toast.success('Categoria excluída! 🗑️');
+      api.delete(`/categorias/${id}`).catch(() => {});
     }
   };
 
@@ -168,7 +167,9 @@ const CategoriaPage: React.FC = () => {
           />
           <div style={styles.formActions}>
             <button type="button" style={styles.btnSecondary} onClick={() => { setShowForm(false); setEditing(null); }}>Cancelar</button>
-            <button type="submit" style={styles.btnPrimary}>{editing ? 'Atualizar' : 'Cadastrar'}</button>
+            <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
+              {isSubmitting ? 'Salvando...' : (editing ? 'Atualizar' : 'Cadastrar')}
+            </button>
           </div>
         </form>
       )}

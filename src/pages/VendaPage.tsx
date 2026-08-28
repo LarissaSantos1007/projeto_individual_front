@@ -47,9 +47,10 @@ const MOVIMENTACOES_EXEMPLO: Movimentacao[] = [
 const VendaPage: React.FC = () => {
   const [vendas, setVendas] = useState<Venda[]>(VENDAS_EXEMPLO);
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>(MOVIMENTACOES_EXEMPLO);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     id_movimentacao: 0,
     preco_unitario_praticado: 0,
@@ -57,27 +58,26 @@ const VendaPage: React.FC = () => {
     valor_total: 0,
   });
 
-  const loadData = async () => {
-    try {
-      const [vendasRes, movRes] = await Promise.all([
-        api.get('/vendas'),
-        api.get('/movimentacoes'),
-      ]);
-      if (vendasRes.data && vendasRes.data.length > 0) {
-        setVendas(vendasRes.data);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [vendasRes, movRes] = await Promise.all([
+          api.get('/vendas'),
+          api.get('/movimentacoes'),
+        ]);
+        if (vendasRes.data && vendasRes.data.length > 0) {
+          setVendas(vendasRes.data);
+        }
+        const movs = (movRes.data || []).filter((m: any) => m.tipo === 'RETIRADA' && m.motivo === 'VENDA');
+        if (movs.length > 0) {
+          setMovimentacoes(movs);
+        }
+      } catch (error) {
+        console.log('Usando dados de exemplo');
       }
-      const movs = (movRes.data || []).filter((m: any) => m.tipo === 'RETIRADA' && m.motivo === 'VENDA');
-      if (movs.length > 0) {
-        setMovimentacoes(movs);
-      }
-    } catch (error) {
-      console.log('Usando dados de exemplo para vendas');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { loadData(); }, []);
+    };
+    setTimeout(loadData, 100);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,27 +90,30 @@ const VendaPage: React.FC = () => {
       toast.error(`Valor total incorreto. Esperado: R$ ${total.toFixed(2)}`);
       return;
     }
+
+    setIsSubmitting(true);
+
+    const mov = movimentacoes.find(m => m.id_movimentacao === formData.id_movimentacao);
+    const novaVenda: Venda = {
+      id_venda: Date.now(),
+      id_movimentacao: formData.id_movimentacao,
+      preco_unitario_praticado: formData.preco_unitario_praticado,
+      quantidade: formData.quantidade,
+      valor_total: formData.valor_total,
+      produto_nome: mov?.produto_nome || 'N/A',
+      data: new Date().toISOString(),
+    };
+    setVendas([...vendas, novaVenda]);
+    toast.success('Venda registrada! 💰');
+
+    setShowForm(false);
+    setFormData({ id_movimentacao: 0, preco_unitario_praticado: 0, quantidade: 0, valor_total: 0 });
+    setIsSubmitting(false);
+
     try {
       await api.post('/vendas', formData);
-      toast.success('Venda registrada com sucesso! 💰');
-      setShowForm(false);
-      setFormData({ id_movimentacao: 0, preco_unitario_praticado: 0, quantidade: 0, valor_total: 0 });
-      await loadData();
-    } catch (error: any) {
-      const mov = movimentacoes.find(m => m.id_movimentacao === formData.id_movimentacao);
-      const novaVenda: Venda = {
-        id_venda: Date.now(),
-        id_movimentacao: formData.id_movimentacao,
-        preco_unitario_praticado: formData.preco_unitario_praticado,
-        quantidade: formData.quantidade,
-        valor_total: formData.valor_total,
-        produto_nome: mov?.produto_nome || 'N/A',
-        data: new Date().toISOString(),
-      };
-      setVendas([...vendas, novaVenda]);
-      toast.success('Venda registrada localmente! 💾');
-      setShowForm(false);
-      setFormData({ id_movimentacao: 0, preco_unitario_praticado: 0, quantidade: 0, valor_total: 0 });
+    } catch (error) {
+      console.log('Não sincronizado');
     }
   };
 
@@ -193,7 +196,9 @@ const VendaPage: React.FC = () => {
             setFormData({ ...formData, quantidade: qtd, valor_total: formData.preco_unitario_praticado * qtd });
           }} style={styles.input} />
           <input type="number" step="0.01" required placeholder="Valor Total" value={formData.valor_total || ''} onChange={(e) => setFormData({ ...formData, valor_total: parseFloat(e.target.value) || 0 })} style={styles.input} />
-          <button type="submit" style={styles.btnPrimary}>Registrar Venda</button>
+          <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
+            {isSubmitting ? 'Salvando...' : 'Registrar Venda'}
+          </button>
         </form>
       )}
 

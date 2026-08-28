@@ -7,10 +7,9 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 5000,
+  timeout: 10000, // ← VOLTOU PARA 10s PARA NÃO DAR ERRO
 });
 
-// Interceptor para tratar erros de conexão
 api.interceptors.response.use(
   (response) => response,
   (error) => {

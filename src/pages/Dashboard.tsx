@@ -27,7 +27,7 @@ const Dashboard: React.FC = () => {
     vendas: 3,
     valorTotal: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [ultimosProdutos, setUltimosProdutos] = useState(DADOS_EXEMPLO.produtos);
 
   useEffect(() => {
@@ -67,7 +67,7 @@ const Dashboard: React.FC = () => {
         setLoading(false);
       }
     };
-    loadStats();
+    setTimeout(loadStats, 100);
   }, []);
 
   if (loading) {

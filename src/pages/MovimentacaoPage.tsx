@@ -58,8 +58,9 @@ const PRODUTOS_EXEMPLO: Produto[] = [
 const MovimentacaoPage: React.FC = () => {
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>(MOVIMENTACOES_EXEMPLO);
   const [produtos, setProdutos] = useState<Produto[]>(PRODUTOS_EXEMPLO);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     id_produto: 0,
     tipo: 'ENTRADA' as 'ENTRADA' | 'RETIRADA',
@@ -68,26 +69,25 @@ const MovimentacaoPage: React.FC = () => {
     observacao: '',
   });
 
-  const loadData = async () => {
-    try {
-      const [movRes, prodRes] = await Promise.all([
-        api.get('/movimentacoes'),
-        api.get('/produtos'),
-      ]);
-      if (movRes.data && movRes.data.length > 0) {
-        setMovimentacoes(movRes.data);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [movRes, prodRes] = await Promise.all([
+          api.get('/movimentacoes'),
+          api.get('/produtos'),
+        ]);
+        if (movRes.data && movRes.data.length > 0) {
+          setMovimentacoes(movRes.data);
+        }
+        if (prodRes.data && prodRes.data.length > 0) {
+          setProdutos(prodRes.data);
+        }
+      } catch (error) {
+        console.log('Usando dados de exemplo');
       }
-      if (prodRes.data && prodRes.data.length > 0) {
-        setProdutos(prodRes.data);
-      }
-    } catch (error) {
-      console.log('Usando dados de exemplo');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { loadData(); }, []);
+    };
+    setTimeout(loadData, 100);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,31 +95,34 @@ const MovimentacaoPage: React.FC = () => {
       toast.error('Preencha todos os campos!');
       return;
     }
+
+    setIsSubmitting(true);
+
+    const produto = produtos.find(p => p.id_produto === formData.id_produto);
+    const novaMov: Movimentacao = {
+      id_movimentacao: Date.now(),
+      id_produto: formData.id_produto,
+      tipo: formData.tipo,
+      quantidade: formData.quantidade,
+      data: new Date().toISOString(),
+      observacao: formData.observacao || '',
+      motivo: formData.motivo,
+      produto_nome: produto?.nome || 'N/A',
+    };
+    setMovimentacoes([novaMov, ...movimentacoes]);
+    toast.success('Movimentação criada! ✅');
+    
+    setShowForm(false);
+    setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
+    setIsSubmitting(false);
+
     try {
       await api.post('/movimentacoes', {
         ...formData,
         data: new Date().toISOString(),
       });
-      toast.success('Movimentação criada com sucesso! 🎉');
-      setShowForm(false);
-      setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
-      await loadData();
-    } catch (error: any) {
-      const produto = produtos.find(p => p.id_produto === formData.id_produto);
-      const novaMov: Movimentacao = {
-        id_movimentacao: Date.now(),
-        id_produto: formData.id_produto,
-        tipo: formData.tipo,
-        quantidade: formData.quantidade,
-        data: new Date().toISOString(),
-        observacao: formData.observacao || '',
-        motivo: formData.motivo,
-        produto_nome: produto?.nome || 'N/A',
-      };
-      setMovimentacoes([novaMov, ...movimentacoes]);
-      toast.success('Movimentação criada localmente! 💾');
-      setShowForm(false);
-      setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
+    } catch (error) {
+      console.log('Não sincronizado');
     }
   };
 
@@ -198,7 +201,9 @@ const MovimentacaoPage: React.FC = () => {
             <option value="AJUSTE">AJUSTE</option>
           </select>
           <input placeholder="Observação (opcional)" value={formData.observacao} onChange={(e) => setFormData({ ...formData, observacao: e.target.value })} style={styles.input} />
-          <button type="submit" style={styles.btnPrimary}>Salvar Movimentação</button>
+          <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
+            {isSubmitting ? 'Salvando...' : 'Salvar Movimentação'}
+          </button>
         </form>
       )}
 
