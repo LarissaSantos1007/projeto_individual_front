@@ -44,6 +44,7 @@ function App() {
         pauseOnHover
         theme="dark"
         style={{ marginTop: '60px' }}
+        progressStyle={{ backgroundColor: '#fd79a8' }}
       />
     </div>
   );
