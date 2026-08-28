@@ -7,17 +7,28 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
-    { id: 'dashboard', label: '📊 Dashboard' },
-    { id: 'categorias', label: '📂 Categorias' },
-    { id: 'produtos', label: '📦 Produtos' },
-    { id: 'movimentacoes', label: '🔄 Movimentações' },
-    { id: 'vendas', label: '💰 Vendas' },
+    { id: 'dashboard', label: 'Início' },
+    { id: 'categorias', label: 'Categorias' },
+    { id: 'produtos', label: 'Produtos' },
+    { id: 'movimentacoes', label: 'Movimentações' },
+    { id: 'vendas', label: 'Vendas' },
   ];
+
+  const icons = {
+    dashboard: '📊',
+    categorias: '📂',
+    produtos: '📦',
+    movimentacoes: '🔄',
+    vendas: '💰',
+  };
 
   return (
     <nav style={styles.nav}>
       <div style={styles.container}>
-        <h1 style={styles.logo}>🏪 Controle de Estoque</h1>
+        <div style={styles.logo}>
+          <span style={styles.logoIcon}>🏪</span>
+          <span style={styles.logoText}>Controle de Estoque</span>
+        </div>
         <div style={styles.tabs}>
           {tabs.map((tab) => (
             <button
@@ -28,7 +39,8 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 ...(activeTab === tab.id ? styles.tabActive : {}),
               }}
             >
-              {tab.label}
+              <span style={styles.tabIcon}>{icons[tab.id as keyof typeof icons]}</span>
+              <span style={styles.tabLabel}>{tab.label}</span>
             </button>
           ))}
         </div>
@@ -39,13 +51,13 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
 const styles = {
   nav: {
-    backgroundColor: '#1a1a2e',
+    background: 'linear-gradient(135deg, #2d1b69, #4a2a5a)',
     padding: '0 2rem',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+    boxShadow: '0 4px 30px rgba(0,0,0,0.5)',
     position: 'sticky' as const,
     top: 0,
     zIndex: 1000,
-    borderBottom: '3px solid #4a90d9',
+    borderBottom: '2px solid rgba(253,121,168,0.3)',
   },
   container: {
     maxWidth: '1400px',
@@ -53,37 +65,56 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '0.75rem 0',
+    padding: '0.5rem 0',
     flexWrap: 'wrap' as const,
     gap: '0.5rem',
   },
   logo: {
-    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  logoIcon: {
+    fontSize: '1.8rem',
+  },
+  logoText: {
     fontSize: '1.3rem',
-    margin: 0,
     fontWeight: 700,
+    color: '#fd79a8',
   },
   tabs: {
     display: 'flex',
-    gap: '0.5rem',
+    gap: '0.25rem',
     flexWrap: 'wrap' as const,
+    alignItems: 'center',
   },
   tab: {
-    padding: '0.5rem 1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.5rem 1.2rem',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '10px',
     fontSize: '0.9rem',
     fontWeight: 500,
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.2s ease',
     background: 'transparent',
-    color: '#a0a0b0',
+    color: 'rgba(255,255,255,0.6)',
     fontFamily: 'inherit',
   },
   tabActive: {
-    background: '#4a90d9',
-    color: '#fff',
-    boxShadow: '0 2px 8px rgba(74,144,217,0.3)',
+    background: 'rgba(253,121,168,0.15)',
+    color: '#fd79a8',
+    boxShadow: '0 0 30px rgba(253,121,168,0.05)',
+    border: '1px solid rgba(253,121,168,0.15)',
+  },
+  tabIcon: {
+    fontSize: '1.1rem',
+  },
+  tabLabel: {
+    fontSize: '0.9rem',
+    fontWeight: 500,
   },
 };
 

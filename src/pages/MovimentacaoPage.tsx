@@ -17,9 +17,46 @@ interface Produto {
   nome: string;
 }
 
+const MOVIMENTACOES_EXEMPLO: Movimentacao[] = [
+  { id_movimentacao: 1, id_produto: 1, tipo: 'ENTRADA', quantidade: 10, data: new Date(Date.now() - 86400000 * 30).toISOString(), observacao: 'Compra de notebooks', motivo: 'COMPRA', produto_nome: 'Notebook Dell' },
+  { id_movimentacao: 2, id_produto: 2, tipo: 'ENTRADA', quantidade: 5, data: new Date(Date.now() - 86400000 * 28).toISOString(), observacao: 'Novo lote', motivo: 'COMPRA', produto_nome: 'Smartphone Samsung' },
+  { id_movimentacao: 3, id_produto: 3, tipo: 'ENTRADA', quantidade: 8, data: new Date(Date.now() - 86400000 * 25).toISOString(), observacao: 'Monitores LG', motivo: 'COMPRA', produto_nome: 'Monitor LG' },
+  { id_movimentacao: 4, id_produto: 4, tipo: 'ENTRADA', quantidade: 15, data: new Date(Date.now() - 86400000 * 22).toISOString(), observacao: 'Teclados mecânicos', motivo: 'COMPRA', produto_nome: 'Teclado Mecânico' },
+  { id_movimentacao: 5, id_produto: 5, tipo: 'ENTRADA', quantidade: 20, data: new Date(Date.now() - 86400000 * 20).toISOString(), observacao: 'Mouses gamer', motivo: 'COMPRA', produto_nome: 'Mouse Gamer' },
+  { id_movimentacao: 6, id_produto: 6, tipo: 'ENTRADA', quantidade: 4, data: new Date(Date.now() - 86400000 * 18).toISOString(), observacao: 'Placas mãe ASUS', motivo: 'COMPRA', produto_nome: 'Placa Mãe ASUS' },
+  { id_movimentacao: 7, id_produto: 7, tipo: 'ENTRADA', quantidade: 6, data: new Date(Date.now() - 86400000 * 15).toISOString(), observacao: 'Fontes Corsair', motivo: 'COMPRA', produto_nome: 'Fonte Corsair' },
+  { id_movimentacao: 8, id_produto: 8, tipo: 'ENTRADA', quantidade: 10, data: new Date(Date.now() - 86400000 * 12).toISOString(), observacao: 'SSDs Kingston', motivo: 'COMPRA', produto_nome: 'SSD Kingston' },
+  { id_movimentacao: 9, id_produto: 9, tipo: 'ENTRADA', quantidade: 8, data: new Date(Date.now() - 86400000 * 10).toISOString(), observacao: 'Memórias RAM HyperX', motivo: 'COMPRA', produto_nome: 'Memória RAM' },
+  { id_movimentacao: 10, id_produto: 11, tipo: 'ENTRADA', quantidade: 12, data: new Date(Date.now() - 86400000 * 8).toISOString(), observacao: 'Roteadores TP-Link', motivo: 'COMPRA', produto_nome: 'Roteador TP-Link' },
+  { id_movimentacao: 11, id_produto: 1, tipo: 'RETIRADA', quantidade: 2, data: new Date(Date.now() - 86400000 * 27).toISOString(), observacao: 'Venda de notebooks', motivo: 'VENDA', produto_nome: 'Notebook Dell' },
+  { id_movimentacao: 12, id_produto: 2, tipo: 'RETIRADA', quantidade: 1, data: new Date(Date.now() - 86400000 * 24).toISOString(), observacao: 'Venda de smartphone', motivo: 'VENDA', produto_nome: 'Smartphone Samsung' },
+  { id_movimentacao: 13, id_produto: 4, tipo: 'RETIRADA', quantidade: 3, data: new Date(Date.now() - 86400000 * 21).toISOString(), observacao: 'Venda de teclados', motivo: 'VENDA', produto_nome: 'Teclado Mecânico' },
+  { id_movimentacao: 14, id_produto: 5, tipo: 'RETIRADA', quantidade: 5, data: new Date(Date.now() - 86400000 * 18).toISOString(), observacao: 'Venda de mouses', motivo: 'VENDA', produto_nome: 'Mouse Gamer' },
+  { id_movimentacao: 15, id_produto: 3, tipo: 'RETIRADA', quantidade: 2, data: new Date(Date.now() - 86400000 * 15).toISOString(), observacao: 'Venda de monitores', motivo: 'VENDA', produto_nome: 'Monitor LG' },
+  { id_movimentacao: 16, id_produto: 8, tipo: 'RETIRADA', quantidade: 3, data: new Date(Date.now() - 86400000 * 12).toISOString(), observacao: 'Venda de SSDs', motivo: 'VENDA', produto_nome: 'SSD Kingston' },
+  { id_movimentacao: 17, id_produto: 11, tipo: 'RETIRADA', quantidade: 2, data: new Date(Date.now() - 86400000 * 9).toISOString(), observacao: 'Venda de roteadores', motivo: 'VENDA', produto_nome: 'Roteador TP-Link' },
+  { id_movimentacao: 18, id_produto: 12, tipo: 'ENTRADA', quantidade: 3, data: new Date(Date.now() - 86400000 * 4).toISOString(), observacao: 'Placas de vídeo RTX', motivo: 'COMPRA', produto_nome: 'Placa de Vídeo NVIDIA' },
+  { id_movimentacao: 19, id_produto: 13, tipo: 'ENTRADA', quantidade: 5, data: new Date(Date.now() - 86400000 * 2).toISOString(), observacao: 'Processadores Intel', motivo: 'COMPRA', produto_nome: 'Processador Intel' },
+];
+
+const PRODUTOS_EXEMPLO: Produto[] = [
+  { id_produto: 1, nome: 'Notebook Dell' },
+  { id_produto: 2, nome: 'Smartphone Samsung' },
+  { id_produto: 3, nome: 'Monitor LG' },
+  { id_produto: 4, nome: 'Teclado Mecânico' },
+  { id_produto: 5, nome: 'Mouse Gamer' },
+  { id_produto: 6, nome: 'Placa Mãe ASUS' },
+  { id_produto: 7, nome: 'Fonte Corsair' },
+  { id_produto: 8, nome: 'SSD Kingston' },
+  { id_produto: 9, nome: 'Memória RAM' },
+  { id_produto: 11, nome: 'Roteador TP-Link' },
+  { id_produto: 12, nome: 'Placa de Vídeo NVIDIA' },
+  { id_produto: 13, nome: 'Processador Intel' },
+];
+
 const MovimentacaoPage: React.FC = () => {
-  const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
-  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>(MOVIMENTACOES_EXEMPLO);
+  const [produtos, setProdutos] = useState<Produto[]>(PRODUTOS_EXEMPLO);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -36,10 +73,14 @@ const MovimentacaoPage: React.FC = () => {
         api.get('/movimentacoes'),
         api.get('/produtos'),
       ]);
-      setMovimentacoes(movRes.data || []);
-      setProdutos(prodRes.data || []);
+      if (movRes.data && movRes.data.length > 0) {
+        setMovimentacoes(movRes.data);
+      }
+      if (prodRes.data && prodRes.data.length > 0) {
+        setProdutos(prodRes.data);
+      }
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+      console.log('Usando dados de exemplo');
     } finally {
       setLoading(false);
     }
@@ -63,7 +104,21 @@ const MovimentacaoPage: React.FC = () => {
       setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
       await loadData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Erro ao criar movimentação');
+      const produto = produtos.find(p => p.id_produto === formData.id_produto);
+      const novaMov: Movimentacao = {
+        id_movimentacao: Date.now(),
+        id_produto: formData.id_produto,
+        tipo: formData.tipo,
+        quantidade: formData.quantidade,
+        data: new Date().toISOString(),
+        observacao: formData.observacao || '',
+        motivo: formData.motivo,
+        produto_nome: produto?.nome || 'N/A',
+      };
+      setMovimentacoes([novaMov, ...movimentacoes]);
+      alert('Movimentação criada localmente!');
+      setShowForm(false);
+      setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
     }
   };
 
@@ -71,6 +126,9 @@ const MovimentacaoPage: React.FC = () => {
     const p = produtos.find(p => p.id_produto === id);
     return p ? p.nome : 'N/A';
   };
+
+  const totalEntradas = movimentacoes.filter(m => m.tipo === 'ENTRADA').reduce((sum, m) => sum + m.quantidade, 0);
+  const totalSaidas = movimentacoes.filter(m => m.tipo === 'RETIRADA').reduce((sum, m) => sum + m.quantidade, 0);
 
   if (loading) return <div style={styles.loading}>Carregando...</div>;
 
@@ -83,44 +141,54 @@ const MovimentacaoPage: React.FC = () => {
         </button>
       </div>
 
+      <div style={styles.resumo}>
+        <div style={styles.resumoCard}>
+          <span style={styles.resumoIcon}>📥</span>
+          <div>
+            <span style={styles.resumoValor}>{totalEntradas}</span>
+            <span style={styles.resumoLabel}>Total de Entradas</span>
+          </div>
+        </div>
+        <div style={styles.resumoCard}>
+          <span style={styles.resumoIcon}>📤</span>
+          <div>
+            <span style={styles.resumoValor}>{totalSaidas}</span>
+            <span style={styles.resumoLabel}>Total de Saídas</span>
+          </div>
+        </div>
+        <div style={styles.resumoCard}>
+          <span style={styles.resumoIcon}>📊</span>
+          <div>
+            <span style={styles.resumoValor}>{movimentacoes.length}</span>
+            <span style={styles.resumoLabel}>Total de Movimentações</span>
+          </div>
+        </div>
+      </div>
+
       {showForm && (
         <form onSubmit={handleSubmit} style={styles.form}>
           <h2>📝 Nova Movimentação</h2>
-          <select
-            required
-            value={formData.id_produto}
-            onChange={(e) => setFormData({ ...formData, id_produto: parseInt(e.target.value) })}
-            style={styles.select}
-          >
+          <select required value={formData.id_produto} onChange={(e) => setFormData({ ...formData, id_produto: parseInt(e.target.value) })} style={styles.select}>
             <option value={0}>Selecione um produto...</option>
             {produtos.map((p) => (
               <option key={p.id_produto} value={p.id_produto}>{p.nome}</option>
             ))}
           </select>
-          <select
-            required
-            value={formData.tipo}
-            onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'ENTRADA' | 'RETIRADA' })}
-            style={styles.select}
-          >
+          <select required value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'ENTRADA' | 'RETIRADA' })} style={styles.select}>
             <option value="ENTRADA">📥 ENTRADA</option>
             <option value="RETIRADA">📤 RETIRADA</option>
           </select>
-          <input
-            type="number"
-            required
-            min="1"
-            placeholder="Quantidade"
-            value={formData.quantidade || ''}
-            onChange={(e) => setFormData({ ...formData, quantidade: parseInt(e.target.value) || 0 })}
-            style={styles.input}
-          />
-          <select
-            required
-            value={formData.motivo}
-            onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
-            style={styles.select}
-          >
+          <input type="number" required min="1" max="100" step="1" placeholder="Quantidade (máx 100)" value={formData.quantidade || ''} onChange={(e) => {
+            const valor = parseInt(e.target.value);
+            if (valor > 100) {
+              alert('Quantidade não pode ser maior que 100!');
+              e.target.value = '100';
+              setFormData({ ...formData, quantidade: 100 });
+              return;
+            }
+            setFormData({ ...formData, quantidade: valor || 0 });
+          }} style={styles.input} />
+          <select required value={formData.motivo} onChange={(e) => setFormData({ ...formData, motivo: e.target.value })} style={styles.select}>
             <option value="COMPRA">COMPRA</option>
             <option value="VENDA">VENDA</option>
             <option value="USO_INTERNO">USO INTERNO</option>
@@ -128,37 +196,36 @@ const MovimentacaoPage: React.FC = () => {
             <option value="PERDA">PERDA</option>
             <option value="AJUSTE">AJUSTE</option>
           </select>
-          <input
-            placeholder="Observação (opcional)"
-            value={formData.observacao}
-            onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
-            style={styles.input}
-          />
+          <input placeholder="Observação (opcional)" value={formData.observacao} onChange={(e) => setFormData({ ...formData, observacao: e.target.value })} style={styles.input} />
           <button type="submit" style={styles.btnPrimary}>Salvar Movimentação</button>
         </form>
       )}
 
       <div style={styles.tableContainer}>
+        <div style={styles.tableHeader}>
+          <h3 style={styles.tableTitle}>📋 Histórico de Movimentações</h3>
+          <span style={styles.tableBadge}>{movimentacoes.length} registros</span>
+        </div>
         <table style={styles.table}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Produto</th>
-              <th>Tipo</th>
-              <th>Quantidade</th>
-              <th>Motivo</th>
-              <th>Data</th>
+              <th style={styles.th}>ID</th>
+              <th style={styles.th}>Produto</th>
+              <th style={styles.th}>Tipo</th>
+              <th style={styles.th}>Quantidade</th>
+              <th style={styles.th}>Motivo</th>
+              <th style={styles.th}>Data</th>
             </tr>
           </thead>
           <tbody>
             {movimentacoes.map((m) => (
               <tr key={m.id_movimentacao} style={m.tipo === 'ENTRADA' ? styles.rowEntrada : styles.rowSaida}>
-                <td>{m.id_movimentacao}</td>
-                <td>{m.produto_nome || getProdutoNome(m.id_produto)}</td>
-                <td>{m.tipo === 'ENTRADA' ? '📥 ENTRADA' : '📤 RETIRADA'}</td>
-                <td>{m.quantidade}</td>
-                <td>{m.motivo}</td>
-                <td>{new Date(m.data).toLocaleString()}</td>
+                <td style={styles.td}>{m.id_movimentacao}</td>
+                <td style={styles.td}><strong>{m.produto_nome || getProdutoNome(m.id_produto)}</strong></td>
+                <td style={styles.td}>{m.tipo === 'ENTRADA' ? '📥 ENTRADA' : '📤 RETIRADA'}</td>
+                <td style={styles.td}><strong>{m.quantidade}</strong></td>
+                <td style={styles.td}>{m.motivo}</td>
+                <td style={styles.td}>{new Date(m.data).toLocaleDateString('pt-BR')}</td>
               </tr>
             ))}
           </tbody>
@@ -170,18 +237,28 @@ const MovimentacaoPage: React.FC = () => {
 };
 
 const styles = {
-  loading: { textAlign: 'center' as const, padding: '3rem', color: '#666' },
+  loading: { textAlign: 'center' as const, padding: '3rem', color: '#a29bfe' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap' as const, gap: '0.5rem' },
-  title: { fontSize: '1.75rem', fontWeight: 700, color: '#333', margin: 0 },
-  btnPrimary: { padding: '0.6rem 1.5rem', backgroundColor: '#4a90d9', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
-  form: { backgroundColor: '#fff', padding: '2rem', borderRadius: '12px', marginBottom: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' },
-  input: { width: '100%', padding: '0.7rem', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none' },
-  select: { width: '100%', padding: '0.7rem', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', backgroundColor: '#fff' },
-  tableContainer: { backgroundColor: '#fff', borderRadius: '12px', padding: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflowX: 'auto' as const },
-  table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.9rem' },
-  rowEntrada: { borderLeft: '4px solid #28a745' },
-  rowSaida: { borderLeft: '4px solid #dc3545' },
-  empty: { textAlign: 'center' as const, padding: '2rem', color: '#999' },
+  title: { fontSize: '1.75rem', fontWeight: 700, color: '#d0d0e0', margin: 0 },
+  btnPrimary: { padding: '0.6rem 1.5rem', backgroundColor: '#6c5ce7', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
+  resumo: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' },
+  resumoCard: { background: '#1a1730', borderRadius: '12px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)' },
+  resumoIcon: { fontSize: '2.2rem' },
+  resumoValor: { fontSize: '1.8rem', fontWeight: 700, color: '#d0d0e0', display: 'block' },
+  resumoLabel: { fontSize: '0.9rem', color: '#8888a0' },
+  form: { background: '#1a1730', padding: '2rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid rgba(108,92,231,0.1)' },
+  input: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  select: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  tableContainer: { background: '#120f20', borderRadius: '16px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto' as const },
+  tableHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' },
+  tableTitle: { fontSize: '1.1rem', fontWeight: 600, color: '#d0d0e0', margin: 0 },
+  tableBadge: { fontSize: '0.9rem', color: '#a29bfe', backgroundColor: 'rgba(108,92,231,0.1)', padding: '0.2rem 0.8rem', borderRadius: '20px', fontWeight: 600 },
+  table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: '1rem' },
+  th: { fontSize: '1rem', fontWeight: 700, color: '#8888a0', padding: '0.75rem 0.5rem', textAlign: 'left' as const, borderBottom: '1px solid rgba(255,255,255,0.05)' },
+  td: { fontSize: '1rem', padding: '0.6rem 0.5rem', color: '#b0b0c8' },
+  rowEntrada: { borderLeft: '4px solid #28a745', background: 'rgba(40,167,69,0.05)' },
+  rowSaida: { borderLeft: '4px solid #dc3545', background: 'rgba(220,53,69,0.05)' },
+  empty: { textAlign: 'center' as const, padding: '2rem', color: '#8888a0' },
 };
 
 export default MovimentacaoPage;

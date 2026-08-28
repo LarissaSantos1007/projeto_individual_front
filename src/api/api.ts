@@ -7,13 +7,17 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 5000,
 });
 
+// Interceptor para tratar erros de conexão
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('Erro na API:', error.response?.data || error.message);
+    if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+      console.warn('⚠️ Backend indisponível - usando dados de exemplo');
+      return Promise.reject({ ...error, isOffline: true });
+    }
     return Promise.reject(error);
   }
 );

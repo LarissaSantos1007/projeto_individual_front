@@ -37,7 +37,7 @@ function App() {
 const styles = {
   app: {
     minHeight: '100vh',
-    backgroundColor: '#f0f2f5',
+    background: 'linear-gradient(135deg, #0f0e1a, #1a1730)',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   },
   main: {

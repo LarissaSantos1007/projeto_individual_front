@@ -18,12 +18,43 @@ interface Categoria {
   nome: string;
 }
 
+const PRODUTOS_EXEMPLO: Produto[] = [
+  { id_produto: 1, codigo: 'PROD-001', nome: 'Notebook Dell Inspiron', descricao: '15.6 polegadas, 8GB RAM, 256GB SSD, Intel i5', id_categoria: 1, preco_unitario: 3499.90, quantidade_disponivel: 15, quantidade_minima: 5, status: 'ATIVO' },
+  { id_produto: 2, codigo: 'PROD-002', nome: 'Smartphone Samsung Galaxy S23', descricao: '6.5 polegadas, 128GB, 5G, tela AMOLED', id_categoria: 22, preco_unitario: 2499.00, quantidade_disponivel: 8, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 3, codigo: 'PROD-003', nome: 'Monitor LG 24"', descricao: '24 polegadas, Full HD, 75Hz, HDMI, DisplayPort', id_categoria: 11, preco_unitario: 899.90, quantidade_disponivel: 3, quantidade_minima: 6, status: 'ATIVO' },
+  { id_produto: 4, codigo: 'PROD-004', nome: 'Teclado Mecânico Redragon', descricao: 'Switches blue, RGB, ABNT2, 60%', id_categoria: 4, preco_unitario: 299.90, quantidade_disponivel: 12, quantidade_minima: 4, status: 'ATIVO' },
+  { id_produto: 5, codigo: 'PROD-005', nome: 'Mouse Gamer Logitech', descricao: '1600 DPI, 7 botões programáveis, RGB, wireless', id_categoria: 4, preco_unitario: 149.90, quantidade_disponivel: 1, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 6, codigo: 'PROD-006', nome: 'Placa Mãe ASUS ROG', descricao: 'Socket LGA1200, DDR4, HDMI, PCIe 4.0', id_categoria: 8, preco_unitario: 799.90, quantidade_disponivel: 0, quantidade_minima: 2, status: 'ATIVO' },
+  { id_produto: 7, codigo: 'PROD-007', nome: 'Fonte Corsair 500W', descricao: 'Fonte ATX, 80 Plus Bronze, modular', id_categoria: 9, preco_unitario: 349.90, quantidade_disponivel: 0, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 8, codigo: 'PROD-008', nome: 'SSD Kingston 480GB', descricao: 'SSD SATA III, leitura 500MB/s, 2.5 polegadas', id_categoria: 5, preco_unitario: 279.90, quantidade_disponivel: 4, quantidade_minima: 4, status: 'ATIVO' },
+  { id_produto: 9, codigo: 'PROD-009', nome: 'Memória RAM HyperX 16GB', descricao: 'DDR4, 3200MHz, RGB, 2x8GB', id_categoria: 7, preco_unitario: 399.90, quantidade_disponivel: 2, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 10, codigo: 'PROD-010', nome: 'Headset Gamer HyperX', descricao: 'Som surround 7.1, microfone removível, USB', id_categoria: 15, preco_unitario: 459.90, quantidade_disponivel: 0, quantidade_minima: 2, status: 'ATIVO' },
+  { id_produto: 11, codigo: 'PROD-011', nome: 'Roteador TP-Link AC1200', descricao: 'Wi-Fi Dual Band, 4 antenas, porta Gigabit', id_categoria: 17, preco_unitario: 199.90, quantidade_disponivel: 6, quantidade_minima: 3, status: 'ATIVO' },
+  { id_produto: 12, codigo: 'PROD-012', nome: 'Placa de Vídeo NVIDIA RTX 3060', descricao: '12GB GDDR6, Ray Tracing, DLSS', id_categoria: 26, preco_unitario: 2499.90, quantidade_disponivel: 0, quantidade_minima: 2, status: 'ATIVO' },
+];
+
+const CATEGORIAS_EXEMPLO: Categoria[] = [
+  { id_categoria: 1, nome: 'Hardware' },
+  { id_categoria: 4, nome: 'Periféricos' },
+  { id_categoria: 5, nome: 'Armazenamento' },
+  { id_categoria: 7, nome: 'Memórias' },
+  { id_categoria: 8, nome: 'Placas Mãe' },
+  { id_categoria: 9, nome: 'Fontes de Alimentação' },
+  { id_categoria: 11, nome: 'Monitores' },
+  { id_categoria: 15, nome: 'Headphones' },
+  { id_categoria: 17, nome: 'Roteadores' },
+  { id_categoria: 22, nome: 'Smartphones' },
+  { id_categoria: 26, nome: 'Placas de Vídeo' },
+];
+
 const ProdutoPage: React.FC = () => {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>(PRODUTOS_EXEMPLO);
+  const [categorias, setCategorias] = useState<Categoria[]>(CATEGORIAS_EXEMPLO);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Produto | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('TODOS');
   const [formData, setFormData] = useState({
     codigo: '',
     nome: '',
@@ -41,10 +72,14 @@ const ProdutoPage: React.FC = () => {
         api.get('/produtos'),
         api.get('/categorias'),
       ]);
-      setProdutos(prodRes.data || []);
-      setCategorias(catRes.data || []);
+      if (prodRes.data && prodRes.data.length > 0) {
+        setProdutos(prodRes.data);
+      }
+      if (catRes.data && catRes.data.length > 0) {
+        setCategorias(catRes.data);
+      }
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+      console.log('Usando dados de exemplo para produtos');
     } finally {
       setLoading(false);
     }
@@ -71,7 +106,17 @@ const ProdutoPage: React.FC = () => {
       setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' });
       await loadData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Erro ao salvar produto');
+      if (editing) {
+        setProdutos(produtos.map(p => p.id_produto === editing.id_produto ? { ...formData, id_produto: editing.id_produto } : p));
+        alert('Produto atualizado localmente!');
+      } else {
+        const novo = { ...formData, id_produto: Date.now() };
+        setProdutos([...produtos, novo]);
+        alert('Produto criado localmente!');
+      }
+      setShowForm(false);
+      setEditing(null);
+      setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' });
     }
   };
 
@@ -97,7 +142,8 @@ const ProdutoPage: React.FC = () => {
         alert('Produto excluído!');
         await loadData();
       } catch (error) {
-        alert('Erro ao excluir produto');
+        setProdutos(produtos.filter(p => p.id_produto !== id));
+        alert('Produto excluído localmente!');
       }
     }
   };
@@ -106,6 +152,12 @@ const ProdutoPage: React.FC = () => {
     const cat = categorias.find(c => c.id_categoria === id);
     return cat ? cat.nome : 'N/A';
   };
+
+  const filteredProdutos = produtos.filter(p => {
+    const matchSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || p.codigo.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = filterStatus === 'TODOS' || p.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
 
   if (loading) return <div style={styles.loading}>Carregando...</div>;
 
@@ -116,6 +168,21 @@ const ProdutoPage: React.FC = () => {
         <button style={styles.btnPrimary} onClick={() => { setShowForm(true); setEditing(null); setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' }); }}>
           ➕ Novo Produto
         </button>
+      </div>
+
+      <div style={styles.filterBar}>
+        <input
+          type="text"
+          placeholder="🔍 Buscar produto..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={styles.searchInput}
+        />
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={styles.filterSelect}>
+          <option value="TODOS">Todos</option>
+          <option value="ATIVO">✅ Ativos</option>
+          <option value="INATIVO">⛔ Inativos</option>
+        </select>
       </div>
 
       {showForm && (
@@ -144,17 +211,17 @@ const ProdutoPage: React.FC = () => {
         </form>
       )}
 
-      <div style={styles.grid}>
-        {produtos.map((p) => (
-          <div key={p.id_produto} style={styles.card}>
+      <div style={styles.gridProdutos}>
+        {filteredProdutos.map((p) => (
+          <div key={p.id_produto} style={styles.cardProduto}>
             <div style={styles.cardHeader}>
-              <h3>{p.nome}</h3>
+              <h3 style={styles.cardTitle}>{p.nome}</h3>
               <div>
                 <button style={styles.btnEdit} onClick={() => handleEdit(p)}>✏️</button>
                 <button style={styles.btnDelete} onClick={() => handleDelete(p.id_produto!)}>🗑️</button>
               </div>
             </div>
-            <p style={styles.cardDesc}>#{p.codigo}</p>
+            <span style={styles.cardCode}>#{p.codigo}</span>
             <p style={styles.cardDesc}>{p.descricao || 'Sem descrição'}</p>
             <div style={styles.cardDetails}>
               <div><strong>Categoria:</strong> {getCategoriaNome(p.id_categoria)}</div>
@@ -166,29 +233,34 @@ const ProdutoPage: React.FC = () => {
           </div>
         ))}
       </div>
-      {produtos.length === 0 && <p style={styles.empty}>Nenhum produto cadastrado.</p>}
+      {filteredProdutos.length === 0 && <p style={styles.empty}>Nenhum produto encontrado.</p>}
     </div>
   );
 };
 
 const styles = {
-  loading: { textAlign: 'center' as const, padding: '3rem', color: '#666' },
+  loading: { textAlign: 'center' as const, padding: '3rem', color: '#a29bfe' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap' as const, gap: '0.5rem' },
-  title: { fontSize: '1.75rem', fontWeight: 700, color: '#333', margin: 0 },
-  btnPrimary: { padding: '0.6rem 1.5rem', backgroundColor: '#4a90d9', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
-  btnSecondary: { padding: '0.6rem 1.5rem', backgroundColor: '#e0e0e0', color: '#555', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
-  btnEdit: { padding: '0.25rem 0.6rem', backgroundColor: '#4a90d9', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '0.25rem' },
-  btnDelete: { padding: '0.25rem 0.6rem', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
-  form: { backgroundColor: '#fff', padding: '2rem', borderRadius: '12px', marginBottom: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' },
-  input: { width: '100%', padding: '0.7rem', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none' },
-  select: { width: '100%', padding: '0.7rem', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', backgroundColor: '#fff' },
+  title: { fontSize: '1.75rem', fontWeight: 700, color: '#fd79a8', margin: 0 },
+  filterBar: { display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' as const },
+  searchInput: { flex: 1, padding: '0.7rem 1rem', border: '1px solid rgba(253,121,168,0.2)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', minWidth: '200px', background: '#1a1730', color: '#d0d0e0' },
+  filterSelect: { padding: '0.7rem 1rem', border: '1px solid rgba(253,121,168,0.2)', borderRadius: '10px', fontSize: '0.95rem', background: '#1a1730', color: '#d0d0e0', outline: 'none', cursor: 'pointer' },
+  btnPrimary: { padding: '0.6rem 1.5rem', backgroundColor: '#6c5ce7', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
+  btnSecondary: { padding: '0.6rem 1.5rem', backgroundColor: '#2d1b69', color: '#fd79a8', border: '1px solid rgba(253,121,168,0.2)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
+  btnEdit: { padding: '0.25rem 0.6rem', backgroundColor: '#6c5ce7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '0.25rem' },
+  btnDelete: { padding: '0.25rem 0.6rem', backgroundColor: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
+  form: { background: '#1a1730', padding: '2rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid rgba(253,121,168,0.1)' },
+  input: { width: '100%', padding: '0.7rem', border: '1px solid rgba(253,121,168,0.2)', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  select: { width: '100%', padding: '0.7rem', border: '1px solid rgba(253,121,168,0.2)', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
   formActions: { display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' },
-  card: { backgroundColor: '#fff', padding: '1.25rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e8ecf1' },
+  gridProdutos: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' },
+  cardProduto: { background: '#1a1730', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(253,121,168,0.08)' },
   cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  cardDesc: { color: '#666', fontSize: '0.9rem', margin: '0.25rem 0' },
-  cardDetails: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem 0.5rem', padding: '0.75rem', backgroundColor: '#f8f9fa', borderRadius: '8px', fontSize: '0.9rem', margin: '0.5rem 0' },
-  empty: { textAlign: 'center' as const, padding: '2rem', color: '#999' },
+  cardTitle: { fontSize: '1.1rem', fontWeight: 600, color: '#d0d0e0', margin: 0 },
+  cardCode: { fontSize: '0.8rem', color: '#666680' },
+  cardDesc: { color: '#8888a0', fontSize: '0.9rem', margin: '0.25rem 0' },
+  cardDetails: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem 0.5rem', padding: '0.75rem', background: '#120f20', borderRadius: '8px', border: '1px solid rgba(253,121,168,0.05)', fontSize: '0.9rem', margin: '0.5rem 0', color: '#b0b0c8' },
+  empty: { textAlign: 'center' as const, padding: '2rem', color: '#8888a0' },
 };
 
 export default ProdutoPage;
