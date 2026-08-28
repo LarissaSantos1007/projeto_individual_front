@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import CategoriaPage from './pages/CategoriaPage';
@@ -30,6 +32,19 @@ function App() {
     <div style={styles.app}>
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
       <main style={styles.main}>{renderPage()}</main>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        style={{ marginTop: '60px' }}
+      />
     </div>
   );
 }

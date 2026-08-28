@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { api } from '../api/api';
 
 interface Categoria {
@@ -66,16 +67,16 @@ const CategoriaPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nome.trim()) {
-      alert('Nome é obrigatório!');
+      toast.error('Nome da categoria é obrigatório!');
       return;
     }
     try {
       if (editing) {
         await api.put(`/categorias/${editing.id_categoria}`, formData);
-        alert('Categoria atualizada!');
+        toast.success('Categoria atualizada com sucesso! 🎉');
       } else {
         await api.post('/categorias', formData);
-        alert('Categoria criada!');
+        toast.success('Categoria criada com sucesso! 🎉');
       }
       setShowForm(false);
       setEditing(null);
@@ -84,11 +85,11 @@ const CategoriaPage: React.FC = () => {
     } catch (error) {
       if (editing) {
         setCategorias(categorias.map(c => c.id_categoria === editing.id_categoria ? { ...formData, id_categoria: editing.id_categoria } : c));
-        alert('Categoria atualizada localmente!');
+        toast.success('Categoria atualizada localmente! 💾');
       } else {
         const nova = { ...formData, id_categoria: Date.now() };
         setCategorias([...categorias, nova]);
-        alert('Categoria criada localmente!');
+        toast.success('Categoria criada localmente! 💾');
       }
       setShowForm(false);
       setEditing(null);
@@ -103,17 +104,18 @@ const CategoriaPage: React.FC = () => {
       descricao: categoria.descricao || '',
     });
     setShowForm(true);
+    toast.info('Editando categoria... ✏️');
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Tem certeza?')) {
+    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
       try {
         await api.delete(`/categorias/${id}`);
-        alert('Categoria excluída!');
+        toast.success('Categoria excluída com sucesso! 🗑️');
         await loadData();
       } catch (error) {
         setCategorias(categorias.filter(c => c.id_categoria !== id));
-        alert('Categoria excluída localmente!');
+        toast.success('Categoria excluída localmente! 🗑️');
       }
     }
   };

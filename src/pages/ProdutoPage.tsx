@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { api } from '../api/api';
 
 interface Produto {
@@ -90,16 +91,16 @@ const ProdutoPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.codigo.trim() || !formData.nome.trim() || formData.id_categoria === 0 || formData.preco_unitario <= 0) {
-      alert('Preencha todos os campos obrigatórios!');
+      toast.error('Preencha todos os campos obrigatórios!');
       return;
     }
     try {
       if (editing) {
         await api.put(`/produtos/${editing.id_produto}`, formData);
-        alert('Produto atualizado!');
+        toast.success('Produto atualizado com sucesso! 📦');
       } else {
         await api.post('/produtos', formData);
-        alert('Produto criado!');
+        toast.success('Produto criado com sucesso! 📦');
       }
       setShowForm(false);
       setEditing(null);
@@ -108,11 +109,11 @@ const ProdutoPage: React.FC = () => {
     } catch (error: any) {
       if (editing) {
         setProdutos(produtos.map(p => p.id_produto === editing.id_produto ? { ...formData, id_produto: editing.id_produto } : p));
-        alert('Produto atualizado localmente!');
+        toast.success('Produto atualizado localmente! 💾');
       } else {
         const novo = { ...formData, id_produto: Date.now() };
         setProdutos([...produtos, novo]);
-        alert('Produto criado localmente!');
+        toast.success('Produto criado localmente! 💾');
       }
       setShowForm(false);
       setEditing(null);
@@ -133,17 +134,18 @@ const ProdutoPage: React.FC = () => {
       status: produto.status,
     });
     setShowForm(true);
+    toast.info('Editando produto... ✏️');
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Tem certeza?')) {
+    if (confirm('Tem certeza que deseja excluir este produto?')) {
       try {
         await api.delete(`/produtos/${id}`);
-        alert('Produto excluído!');
+        toast.success('Produto excluído com sucesso! 🗑️');
         await loadData();
       } catch (error) {
         setProdutos(produtos.filter(p => p.id_produto !== id));
-        alert('Produto excluído localmente!');
+        toast.success('Produto excluído localmente! 🗑️');
       }
     }
   };

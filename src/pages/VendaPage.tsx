@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { api } from '../api/api';
 
 interface Venda {
@@ -81,17 +82,17 @@ const VendaPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.id_movimentacao === 0 || formData.quantidade <= 0 || formData.preco_unitario_praticado <= 0) {
-      alert('Preencha todos os campos!');
+      toast.error('Preencha todos os campos!');
       return;
     }
     const total = formData.preco_unitario_praticado * formData.quantidade;
     if (Math.abs(formData.valor_total - total) > 0.01) {
-      alert(`Valor total incorreto. Esperado: R$ ${total.toFixed(2)}`);
+      toast.error(`Valor total incorreto. Esperado: R$ ${total.toFixed(2)}`);
       return;
     }
     try {
       await api.post('/vendas', formData);
-      alert('Venda registrada!');
+      toast.success('Venda registrada com sucesso! 💰');
       setShowForm(false);
       setFormData({ id_movimentacao: 0, preco_unitario_praticado: 0, quantidade: 0, valor_total: 0 });
       await loadData();
@@ -107,7 +108,7 @@ const VendaPage: React.FC = () => {
         data: new Date().toISOString(),
       };
       setVendas([...vendas, novaVenda]);
-      alert('Venda registrada localmente!');
+      toast.success('Venda registrada localmente! 💾');
       setShowForm(false);
       setFormData({ id_movimentacao: 0, preco_unitario_praticado: 0, quantidade: 0, valor_total: 0 });
     }

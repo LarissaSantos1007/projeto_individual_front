@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { api } from '../api/api';
 
 interface Movimentacao {
@@ -91,7 +92,7 @@ const MovimentacaoPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.id_produto === 0 || formData.quantidade <= 0) {
-      alert('Preencha todos os campos!');
+      toast.error('Preencha todos os campos!');
       return;
     }
     try {
@@ -99,7 +100,7 @@ const MovimentacaoPage: React.FC = () => {
         ...formData,
         data: new Date().toISOString(),
       });
-      alert('Movimentação criada!');
+      toast.success('Movimentação criada com sucesso! 🎉');
       setShowForm(false);
       setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
       await loadData();
@@ -116,7 +117,7 @@ const MovimentacaoPage: React.FC = () => {
         produto_nome: produto?.nome || 'N/A',
       };
       setMovimentacoes([novaMov, ...movimentacoes]);
-      alert('Movimentação criada localmente!');
+      toast.success('Movimentação criada localmente! 💾');
       setShowForm(false);
       setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
     }
@@ -181,7 +182,7 @@ const MovimentacaoPage: React.FC = () => {
           <input type="number" required min="1" max="100" step="1" placeholder="Quantidade (máx 100)" value={formData.quantidade || ''} onChange={(e) => {
             const valor = parseInt(e.target.value);
             if (valor > 100) {
-              alert('Quantidade não pode ser maior que 100!');
+              toast.error('Quantidade não pode ser maior que 100!');
               e.target.value = '100';
               setFormData({ ...formData, quantidade: 100 });
               return;
