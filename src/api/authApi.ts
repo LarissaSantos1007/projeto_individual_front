@@ -10,7 +10,6 @@ export const authApi = {
 
   // Logout (apenas limpa o token no cliente)
   logout: async (): Promise<void> => {
-    // Não precisa chamar o backend, apenas limpar o token local
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   },
@@ -20,11 +19,6 @@ export const authApi = {
     try {
       const token = localStorage.getItem('token');
       if (!token) return false;
-      
-      // Opcional: chamar endpoint de validação do token
-      // const response = await api.get('/auth/validate');
-      // return response.status === 200;
-      
       return true;
     } catch {
       return false;

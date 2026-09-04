@@ -1,108 +1,145 @@
-import React, { useEffect, useState } from 'react';
-import { api } from '../api/api';
-import SimpleChart from '../components/SimpleChart';
-import { toCSV, downloadCSV } from '../utils/exportCsv';
+import React, { useState } from 'react';
+import {
+  Container,
+  Typography,
+  Grid,
+  Paper,
+  Card,
+  CardContent,
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField
+} from '@mui/material';
+import { Download, Assessment, TrendingUp, TrendingDown } from '@mui/icons-material';
 
-const RelatoriosPage: React.FC = () => {
-  const [vendas, setVendas] = useState<any[]>([]);
-  const [produtos, setProdutos] = useState<any[]>([]);
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+const RelatoriosPage = () => {
+  const [periodo, setPeriodo] = useState('mensal');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [vRes, pRes] = await Promise.all([api.get('/vendas'), api.get('/produtos')]);
-      setVendas(vRes.data || []);
-      setProdutos(pRes.data || []);
-    } catch (err) {
-      console.log('Erro ao carregar relatórios, usando dados locais');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    setTimeout(loadData, 100);
-  }, []);
-
-  const filterVendasPeriodo = () => {
-    if (!startDate && !endDate) return vendas;
-    return vendas.filter(v => {
-      if (!v.data) return false;
-      const d = new Date(v.data);
-      if (startDate && d < new Date(startDate)) return false;
-      if (endDate && d > new Date(endDate)) return false;
-      return true;
-    });
-  };
-
-  const vendasFiltradas = filterVendasPeriodo();
-
-  const vendasPorDia = () => {
-    const map = new Map<string, number>();
-    vendasFiltradas.forEach(v => {
-      const key = v.data ? new Date(v.data).toLocaleDateString('pt-BR') : 'Sem data';
-      map.set(key, (map.get(key) || 0) + (v.valor_total || 0));
-    });
-    const labels = Array.from(map.keys());
-    const data = Array.from(map.values());
-    return { labels, data };
-  };
-
-  const lowStockProducts = produtos.filter(p => (p.quantidade_disponivel || 0) <= (p.quantidade_minima || 0));
-
-  const exportVendas = () => {
-    const csv = toCSV(vendasFiltradas, ['id_venda', 'produto_nome', 'quantidade', 'preco_unitario_praticado', 'valor_total', 'data']);
-    downloadCSV(`vendas_${startDate || 'all'}_${endDate || 'all'}.csv`, csv);
-  };
-
-  const exportLowStock = () => {
-    const csv = toCSV(lowStockProducts, ['id_produto', 'nome', 'quantidade_disponivel', 'quantidade_minima']);
-    downloadCSV('produtos_estoque_baixo.csv', csv);
-  };
-
-  if (loading) return <div style={{padding: '2rem'}}>Carregando relatórios...</div>;
-
-  const { labels, data } = vendasPorDia();
+  const stats = [
+    { title: 'Total de Vendas', value: 'R$ 12.500,00', change: '+15%', icon: <TrendingUp color="success" /> },
+    { title: 'Total de Produtos', value: '150', change: '+5%', icon: <TrendingUp color="success" /> },
+    { title: 'Ticket Médio', value: 'R$ 278,00', change: '-2%', icon: <TrendingDown color="error" /> },
+  ];
 
   return (
-    <div>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16}}>
-        <div>
-          <h1 style={{margin:0}}>📈 Relatórios</h1>
-          <p style={{color:'#888', margin: '4px 0 0'}}>Vendas por período e produtos com estoque baixo</p>
-        </div>
-        <div style={{display:'flex', gap:8}}>
-          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{padding:8}} />
-          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{padding:8}} />
-          <button onClick={exportVendas} style={{padding:'8px 12px'}}>📤 Exportar Vendas</button>
-          <button onClick={exportLowStock} style={{padding:'8px 12px'}}>📤 Exportar Estoque Baixo</button>
-        </div>
-      </div>
+    <Container maxWidth="xl" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Relatórios
+      </Typography>
 
-      <div style={{display:'grid', gridTemplateColumns: '1fr 360px', gap:16}}>
-        <div style={{background:'#120f20', padding:16, borderRadius:12}}>
-          <h3 style={{marginTop:0}}>Vendas por dia</h3>
-          {data.length === 0 ? <p style={{color:'#888'}}>Nenhuma venda no período selecionado.</p> : <SimpleChart data={data} labels={labels} />}
-          <div style={{marginTop:12}}>
-            <strong>Total:</strong> R$ {vendasFiltradas.reduce((s, v) => s + (v.valor_total || 0), 0).toFixed(2)}
-          </div>
-        </div>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <FormControl fullWidth>
+              <InputLabel>Período</InputLabel>
+              <Select
+                value={periodo}
+                label="Período"
+                onChange={(e) => setPeriodo(e.target.value)}
+              >
+                <MenuItem value="diario">Diário</MenuItem>
+                <MenuItem value="semanal">Semanal</MenuItem>
+                <MenuItem value="mensal">Mensal</MenuItem>
+                <MenuItem value="anual">Anual</MenuItem>
+                <MenuItem value="personalizado">Personalizado</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              label="Data Início"
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              label="Data Fim"
+              type="date"
+              value={dataFim}
+              onChange={(e) => setDataFim(e.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <Button 
+              fullWidth 
+              variant="contained" 
+              startIcon={<Assessment />}
+              sx={{ height: 56 }}
+            >
+              Gerar Relatório
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
 
-        <div style={{background:'#120f20', padding:16, borderRadius:12}}>
-          <h3 style={{marginTop:0}}>Produtos com estoque baixo</h3>
-          {lowStockProducts.length === 0 ? <p style={{color:'#888'}}>Nenhum produto com estoque baixo.</p> : (
-            <ul>
-              {lowStockProducts.map((p: any) => (
-                <li key={p.id_produto}>{p.nome} — {p.quantidade_disponivel} (mín: {p.quantidade_minima})</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        {stats.map((stat, index) => (
+          <Grid key={index} size={{ xs: 12, md: 4 }}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography color="textSecondary" gutterBottom>
+                      {stat.title}
+                    </Typography>
+                    <Typography variant="h5">
+                      {stat.value}
+                    </Typography>
+                    <Typography variant="body2" color={stat.change.startsWith('+') ? 'success.main' : 'error.main'}>
+                      {stat.change} em relação ao período anterior
+                    </Typography>
+                  </Box>
+                  <Box>
+                    {stat.icon}
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Vendas por Categoria</Typography>
+              <Button size="small" startIcon={<Download />}>
+                Exportar
+              </Button>
+            </Box>
+            <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography color="textSecondary">Gráfico de Vendas por Categoria</Typography>
+            </Box>
+          </Paper>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Produtos Mais Vendidos</Typography>
+              <Button size="small" startIcon={<Download />}>
+                Exportar
+              </Button>
+            </Box>
+            <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography color="textSecondary">Lista de Produtos Mais Vendidos</Typography>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
 

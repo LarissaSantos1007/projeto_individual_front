@@ -1,16 +1,36 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { CircularProgress, Box } from '@mui/material';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  redirectTo?: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  // Verifica se o usuário está logado
-  const isAuthenticated = localStorage.getItem('auth') === 'true';
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  redirectTo = '/login' 
+}) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh' 
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   if (!isAuthenticated) {
-    window.location.href = '/login';
-    return null;
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <>{children}</>;

@@ -1,22 +1,18 @@
 export interface Produto {
-  id_produto?: number;
-  codigo: string;
+  id: number;
   nome: string;
-  descricao?: string;
   id_categoria: number;
   preco_unitario: number;
   quantidade_disponivel: number;
-  quantidade_minima: number;
-  status: 'ATIVO' | 'INATIVO';
+  codigo?: string;
+  descricao?: string;
+  data_criacao?: Date;
+  data_atualizacao?: Date;
 }
 
-export interface ProdutoDTO {
-  codigo: string;
+export interface Categoria {
+  id: number;
   nome: string;
-  descricao?: string;
-  id_categoria: number;
-  preco_unitario: number;
-  quantidade_disponivel: number;
-  quantidade_minima: number;
-  status: 'ATIVO' | 'INATIVO';
+  descricao: string;
+  ativo?: boolean;
 }

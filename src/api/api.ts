@@ -1,22 +1,39 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3333/api';
-
-export const api = axios.create({
-  baseURL: API_URL,
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
   headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000, // ← VOLTOU PARA 10s PARA NÃO DAR ERRO
+    'Content-Type': 'application/json'
+  }
 });
 
+// Interceptor para adicionar token em todas as requisições
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor para tratar erros de autenticação
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
-      console.warn('⚠️ Backend indisponível - usando dados de exemplo');
-      return Promise.reject({ ...error, isOffline: true });
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
+
+// Exportar como default e como named export
+export default api;
+export { api };

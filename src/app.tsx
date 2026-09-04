@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+import LoginPage from './pages/LoginPage';
+import CadastroPage from './pages/CadastroPage';
 import Dashboard from './pages/Dashboard';
 import CategoriaPage from './pages/CategoriaPage';
 import ProdutoPage from './pages/ProdutoPage';
@@ -10,60 +16,79 @@ import VendaPage from './pages/VendaPage';
 import RelatoriosPage from './pages/RelatoriosPage';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-
-  const renderPage = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'categorias':
-        return <CategoriaPage />;
-      case 'produtos':
-        return <ProdutoPage />;
-      case 'movimentacoes':
-        return <MovimentacaoPage />;
-      case 'vendas':
-        return <VendaPage />;
-      case 'relatorios':
-        return <RelatoriosPage />;
-      default:
-        return <Dashboard />;
-    }
-  };
-
   return (
-    <div style={styles.app}>
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main style={styles.main}>{renderPage()}</main>
-      <ToastContainer
-        position="top-right"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-        style={{ marginTop: '60px' }}
-        progressStyle={{ backgroundColor: '#fd79a8' }}
-      />
-    </div>
+    <Router>
+      <AuthProvider>
+        <div className="App">
+          <ToastContainer 
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+          
+          <Navbar />
+          
+          <Routes>
+            {/* Rotas públicas */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/cadastro" element={<CadastroPage />} />
+            
+            {/* Rotas protegidas */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/categorias" element={
+              <ProtectedRoute>
+                <CategoriaPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/produtos" element={
+              <ProtectedRoute>
+                <ProdutoPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/movimentacoes" element={
+              <ProtectedRoute>
+                <MovimentacaoPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/vendas" element={
+              <ProtectedRoute>
+                <VendaPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/relatorios" element={
+              <ProtectedRoute>
+                <RelatoriosPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </AuthProvider>
+    </Router>
   );
 }
-
-const styles = {
-  app: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #0f0e1a, #1a1730)',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  },
-  main: {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '2rem',
-  },
-};
 
 export default App;

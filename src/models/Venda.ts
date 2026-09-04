@@ -1,14 +1,9 @@
 export interface Venda {
-  id_venda?: number;
-  id_movimentacao: number;
-  preco_unitario_praticado: number;
+  id: number;
+  produtoId: number;
   quantidade: number;
-  valor_total: number;
-}
-
-export interface VendaDTO {
-  id_movimentacao: number;
-  preco_unitario_praticado: number;
-  quantidade: number;
-  valor_total: number;
+  valorTotal: number;
+  dataVenda: Date;
+  cliente?: string;
+  status?: 'PENDENTE' | 'CONCLUIDA' | 'CANCELADA';
 }

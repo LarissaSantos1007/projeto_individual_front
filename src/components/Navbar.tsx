@@ -1,106 +1,221 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  Box,
+  Avatar,
+  Tooltip,
+  Container,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  useTheme,
+  useMediaQuery
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Dashboard,
+  Category,
+  Inventory,
+  ShoppingCart,
+  Assessment,
+  Logout,
+  Login,
+  PersonAdd,
+  Store,
+  Person
+} from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 
-interface NavbarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
+const Navbar = () => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  const { user, isAuthenticated, logout } = useAuth();
 
-const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
-  const tabs = [
-    { id: 'dashboard', label: '📊 Início' },
-    { id: 'categorias', label: '📂 Categorias' },
-    { id: 'produtos', label: '📦 Produtos' },
-    { id: 'movimentacoes', label: '🔄 Movimentações' },
-    { id: 'vendas', label: '💰 Vendas' },
-    { id: 'relatorios', label: '📈 Relatórios' },
+  const menuItems = [
+    { label: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+    { label: 'Categorias', path: '/categorias', icon: <Category /> },
+    { label: 'Produtos', path: '/produtos', icon: <Inventory /> },
+    { label: 'Movimentações', path: '/movimentacoes', icon: <ShoppingCart /> },
+    { label: 'Vendas', path: '/vendas', icon: <Store /> },
+    { label: 'Relatórios', path: '/relatorios', icon: <Assessment /> },
   ];
 
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    handleClose();
+  };
+
+  const toggleDrawer = (open: boolean) => {
+    setDrawerOpen(open);
+  };
+
+  const drawerList = () => (
+    <Box sx={{ width: 250 }} role="presentation">
+      <List>
+        {menuItems.map((item) => (
+          <ListItem 
+            key={item.path} 
+            component={Link} 
+            to={item.path}
+            onClick={() => toggleDrawer(false)}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.label} />
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
+
   return (
-    <nav style={styles.nav}>
-      <div style={styles.container}>
-        <div style={styles.logo}>
-          <span style={styles.logoIcon}>🏪</span>
-          <span style={styles.logoText}>Controle de Estoque</span>
-        </div>
-        <div style={styles.tabs}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                ...styles.tab,
-                ...(activeTab === tab.id ? styles.tabActive : {}),
+    <>
+      <AppBar position="sticky">
+        <Container maxWidth="xl">
+          <Toolbar disableGutters>
+            {isMobile && isAuthenticated && (
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                onClick={() => toggleDrawer(true)}
+                sx={{ mr: 2 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+
+            <Typography
+              variant="h6"
+              noWrap
+              component={Link}
+              to={isAuthenticated ? '/dashboard' : '/login'}
+              sx={{
+                mr: 2,
+                display: 'flex',
+                fontWeight: 700,
+                color: 'inherit',
+                textDecoration: 'none',
+                flexGrow: isMobile ? 1 : 0,
               }}
             >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </nav>
-  );
-};
+              SISTEMA
+            </Typography>
 
-const styles = {
-  nav: {
-    background: 'linear-gradient(135deg, #2d1b69, #4a2a5a)',
-    padding: '0 2rem',
-    boxShadow: '0 4px 30px rgba(0,0,0,0.5)',
-    position: 'sticky' as const,
-    top: 0,
-    zIndex: 1000,
-    borderBottom: '2px solid rgba(253,121,168,0.3)',
-  },
-  container: {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0.5rem 0',
-    flexWrap: 'wrap' as const,
-    gap: '0.5rem',
-  },
-  logo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  logoIcon: {
-    fontSize: '1.8rem',
-  },
-  logoText: {
-    fontSize: '1.3rem',
-    fontWeight: 700,
-    color: '#fd79a8',
-  },
-  tabs: {
-    display: 'flex',
-    gap: '0.25rem',
-    flexWrap: 'wrap' as const,
-    alignItems: 'center',
-  },
-  tab: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    padding: '0.5rem 1.2rem',
-    border: 'none',
-    borderRadius: '10px',
-    fontSize: '0.9rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    background: 'transparent',
-    color: 'rgba(255,255,255,0.6)',
-    fontFamily: 'inherit',
-  },
-  tabActive: {
-    background: 'rgba(253,121,168,0.15)',
-    color: '#fd79a8',
-    boxShadow: '0 0 30px rgba(253,121,168,0.05)',
-    border: '1px solid rgba(253,121,168,0.15)',
-  },
+            {!isMobile && isAuthenticated && (
+              <Box sx={{ flexGrow: 1, display: 'flex', ml: 2 }}>
+                {menuItems.map((item) => (
+                  <Button
+                    key={item.path}
+                    component={Link}
+                    to={item.path}
+                    color="inherit"
+                    sx={{ mx: 1 }}
+                    startIcon={item.icon}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </Box>
+            )}
+
+            <Box sx={{ flexGrow: 0 }}>
+              {isAuthenticated ? (
+                <div>
+                  <Tooltip title="Configurações">
+                    <IconButton onClick={handleMenu} color="inherit">
+                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#1976d2' }}>
+                        {user?.nome?.[0]?.toUpperCase() || 'U'}
+                      </Avatar>
+                    </IconButton>
+                  </Tooltip>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleClose}
+                  >
+                    <MenuItem disabled>
+                      <Box>
+                        {/* CORREÇÃO: Remover fontWeight como prop */}
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          {user?.nome || 'Usuário'}
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          {user?.email || ''}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem divider />
+                    <MenuItem onClick={() => { navigate('/perfil'); handleClose(); }}>
+                      <ListItemIcon>
+                        <Person fontSize="small" />
+                      </ListItemIcon>
+                      Perfil
+                    </MenuItem>
+                    <MenuItem onClick={handleLogout}>
+                      <ListItemIcon>
+                        <Logout fontSize="small" />
+                      </ListItemIcon>
+                      Sair
+                    </MenuItem>
+                  </Menu>
+                </div>
+              ) : (
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    component={Link}
+                    to="/login"
+                    color="inherit"
+                    startIcon={<Login />}
+                    variant="outlined"
+                    sx={{ borderColor: 'rgba(255,255,255,0.3)' }}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    component={Link}
+                    to="/cadastro"
+                    color="inherit"
+                    startIcon={<PersonAdd />}
+                  >
+                    Cadastro
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          </Toolbar>
+        </Container>
+      </AppBar>
+
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={() => toggleDrawer(false)}
+      >
+        {drawerList()}
+      </Drawer>
+    </>
+  );
 };
 
 export default Navbar;

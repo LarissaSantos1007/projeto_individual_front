@@ -1,453 +1,113 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { api } from '../api/api';
-import { toCSV, downloadCSV } from '../utils/exportCsv';
+import React, { useState } from 'react';
+import {
+  Container,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  Box,
+  Chip,
+  TablePagination
+} from '@mui/material';
+import { Edit, Delete, Receipt } from '@mui/icons-material';
 
-interface Venda {
-  id_venda?: number;
-  id_movimentacao: number;
-  preco_unitario_praticado: number;
-  quantidade: number;
-  valor_total: number;
-  produto_nome?: string;
-  data?: string;
-}
+const VendaPage = () => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
-interface Movimentacao {
-  id_movimentacao: number;
-  id_produto: number;
-  quantidade: number;
-  produto_nome?: string;
-}
+  const vendas = [
+    { id: 1, produto: 'Smartphone', quantidade: 2, valorTotal: 3999.98, data: '2024-01-15', status: 'CONCLUIDA' },
+    { id: 2, produto: 'Camiseta', quantidade: 3, valorTotal: 149.97, data: '2024-01-16', status: 'PENDENTE' },
+    { id: 3, produto: 'Arroz', quantidade: 10, valorTotal: 259.90, data: '2024-01-17', status: 'CONCLUIDA' },
+  ];
 
-const VENDAS_EXEMPLO: Venda[] = [
-  { id_venda: 1, id_movimentacao: 11, preco_unitario_praticado: 3499.90, quantidade: 2, valor_total: 6999.80, produto_nome: 'Notebook Dell', data: new Date(Date.now() - 86400000 * 27).toISOString() },
-  { id_venda: 2, id_movimentacao: 12, preco_unitario_praticado: 2499.00, quantidade: 1, valor_total: 2499.00, produto_nome: 'Smartphone Samsung', data: new Date(Date.now() - 86400000 * 24).toISOString() },
-  { id_venda: 3, id_movimentacao: 13, preco_unitario_praticado: 299.90, quantidade: 3, valor_total: 899.70, produto_nome: 'Teclado Mecânico', data: new Date(Date.now() - 86400000 * 21).toISOString() },
-  { id_venda: 4, id_movimentacao: 14, preco_unitario_praticado: 149.90, quantidade: 5, valor_total: 749.50, produto_nome: 'Mouse Gamer', data: new Date(Date.now() - 86400000 * 18).toISOString() },
-  { id_venda: 5, id_movimentacao: 15, preco_unitario_praticado: 899.90, quantidade: 2, valor_total: 1799.80, produto_nome: 'Monitor LG', data: new Date(Date.now() - 86400000 * 15).toISOString() },
-  { id_venda: 6, id_movimentacao: 16, preco_unitario_praticado: 279.90, quantidade: 3, valor_total: 839.70, produto_nome: 'SSD Kingston', data: new Date(Date.now() - 86400000 * 12).toISOString() },
-  { id_venda: 7, id_movimentacao: 17, preco_unitario_praticado: 199.90, quantidade: 2, valor_total: 399.80, produto_nome: 'Roteador TP-Link', data: new Date(Date.now() - 86400000 * 9).toISOString() },
-  { id_venda: 8, id_movimentacao: 11, preco_unitario_praticado: 3499.90, quantidade: 1, valor_total: 3499.90, produto_nome: 'Notebook Dell', data: new Date(Date.now() - 86400000 * 7).toISOString() },
-  { id_venda: 9, id_movimentacao: 14, preco_unitario_praticado: 149.90, quantidade: 3, valor_total: 449.70, produto_nome: 'Mouse Gamer', data: new Date(Date.now() - 86400000 * 5).toISOString() },
-  { id_venda: 10, id_movimentacao: 12, preco_unitario_praticado: 2499.00, quantidade: 2, valor_total: 4998.00, produto_nome: 'Smartphone Samsung', data: new Date(Date.now() - 86400000 * 3).toISOString() },
-  { id_venda: 11, id_movimentacao: 15, preco_unitario_praticado: 899.90, quantidade: 1, valor_total: 899.90, produto_nome: 'Monitor LG', data: new Date(Date.now() - 86400000 * 2).toISOString() },
-  { id_venda: 12, id_movimentacao: 13, preco_unitario_praticado: 299.90, quantidade: 2, valor_total: 599.80, produto_nome: 'Teclado Mecânico', data: new Date(Date.now() - 86400000 * 1).toISOString() },
-];
-
-const MOVIMENTACOES_EXEMPLO: Movimentacao[] = [
-  { id_movimentacao: 11, id_produto: 1, quantidade: 2, produto_nome: 'Notebook Dell' },
-  { id_movimentacao: 12, id_produto: 2, quantidade: 1, produto_nome: 'Smartphone Samsung' },
-  { id_movimentacao: 13, id_produto: 4, quantidade: 3, produto_nome: 'Teclado Mecânico' },
-  { id_movimentacao: 14, id_produto: 5, quantidade: 5, produto_nome: 'Mouse Gamer' },
-  { id_movimentacao: 15, id_produto: 3, quantidade: 2, produto_nome: 'Monitor LG' },
-  { id_movimentacao: 16, id_produto: 8, quantidade: 3, produto_nome: 'SSD Kingston' },
-  { id_movimentacao: 17, id_produto: 11, quantidade: 2, produto_nome: 'Roteador TP-Link' },
-];
-
-const VendaPage: React.FC = () => {
-  const [vendas, setVendas] = useState<Venda[]>(VENDAS_EXEMPLO);
-  const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>(MOVIMENTACOES_EXEMPLO);
-  const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [editing, setEditing] = useState<Venda | null>(null);
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
-  const [formData, setFormData] = useState({
-    id_movimentacao: 0,
-    preco_unitario_praticado: 0,
-    quantidade: 0,
-    valor_total: 0,
-  });
-
-  const loadData = async () => {
-    try {
-      const [vendasRes, movRes] = await Promise.all([
-        api.get('/vendas'),
-        api.get('/movimentacoes'),
-      ]);
-      if (vendasRes.data && vendasRes.data.length > 0) {
-        const sorted = [...vendasRes.data].sort((a, b) => (a.id_venda || 0) - (b.id_venda || 0));
-        setVendas(sorted);
-      }
-      const movs = (movRes.data || []).filter((m: any) => m.tipo === 'RETIRADA' && m.motivo === 'VENDA');
-      if (movs.length > 0) {
-        setMovimentacoes(movs);
-      }
-    } catch (error) {
-      console.log('Usando dados de exemplo');
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'CONCLUIDA': return 'success';
+      case 'PENDENTE': return 'warning';
+      case 'CANCELADA': return 'error';
+      default: return 'default';
     }
   };
 
-  useEffect(() => {
-    setTimeout(loadData, 100);
-  }, []);
-
-  // ===== VALIDAÇÕES =====
-  const validarCampos = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    let isValid = true;
-
-    if (formData.id_movimentacao === 0) {
-      newErrors.id_movimentacao = 'Selecione uma movimentação!';
-      isValid = false;
-    }
-
-    if (formData.preco_unitario_praticado <= 0) {
-      newErrors.preco_unitario_praticado = 'Preço deve ser maior que zero!';
-      isValid = false;
-    }
-
-    if (formData.quantidade <= 0) {
-      newErrors.quantidade = 'Quantidade deve ser maior que zero!';
-      isValid = false;
-    }
-
-    if (formData.valor_total <= 0) {
-      newErrors.valor_total = 'Valor total deve ser maior que zero!';
-      isValid = false;
-    }
-
-    // Valida se valor_total é igual a preco * quantidade
-    const totalCalculado = formData.preco_unitario_praticado * formData.quantidade;
-    if (Math.abs(formData.valor_total - totalCalculado) > 0.01 && formData.valor_total > 0) {
-      newErrors.valor_total = `Valor total deve ser R$ ${totalCalculado.toFixed(2)}!`;
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
+  const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+    setPage(newPage);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validarCampos()) {
-      toast.error('Corrija os erros antes de continuar!');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    const mov = movimentacoes.find(m => m.id_movimentacao === formData.id_movimentacao);
-
-    if (editing) {
-      const updated: Venda = { ...editing, ...formData, produto_nome: mov?.produto_nome || editing.produto_nome, data: new Date().toISOString() };
-      setVendas(vendas.map(v => v.id_venda === editing.id_venda ? updated : v));
-      toast.success('Venda atualizada! ✅');
-      try {
-        await api.put(`/vendas/${editing.id_venda}`, formData);
-        await loadData();
-      } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Erro ao atualizar venda!');
-      }
-      setEditing(null);
-    } else {
-      const novoId = vendas.length > 0 ? Math.max(...vendas.map(v => v.id_venda || 0)) + 1 : 1;
-      const novaVenda = {
-        id_venda: novoId,
-        id_movimentacao: formData.id_movimentacao,
-        preco_unitario_praticado: formData.preco_unitario_praticado,
-        quantidade: formData.quantidade,
-        valor_total: formData.valor_total,
-        produto_nome: mov?.produto_nome || 'N/A',
-        data: new Date().toISOString(),
-      };
-      const novasVendas = [...vendas, novaVenda].sort((a, b) => (a.id_venda || 0) - (b.id_venda || 0));
-      setVendas(novasVendas);
-      toast.success('Venda registrada! 💰');
-      try {
-        await api.post('/vendas', formData);
-        await loadData();
-      } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Erro ao registrar venda!');
-      }
-    }
-
-    setShowForm(false);
-    setFormData({ id_movimentacao: 0, preco_unitario_praticado: 0, quantidade: 0, valor_total: 0 });
-    setErrors({});
-    setIsSubmitting(false);
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setFormData({ id_movimentacao: 0, preco_unitario_praticado: 0, quantidade: 0, valor_total: 0 });
-    setErrors({});
-  };
-
-  const handleEdit = (v: Venda) => {
-    setEditing(v);
-    setFormData({ id_movimentacao: v.id_movimentacao, preco_unitario_praticado: v.preco_unitario_praticado, quantidade: v.quantidade, valor_total: v.valor_total });
-    setShowForm(true);
-  };
-
-  const filteredVendas = vendas.filter(v => {
-    const matchesSearch = v.produto_nome?.toLowerCase().includes(searchTerm.toLowerCase()) || v.id_venda?.toString().includes(searchTerm);
-    if (!startDate && !endDate) return matchesSearch;
-    const d = v.data ? new Date(v.data) : null;
-    if (!d) return false;
-    if (startDate && d < new Date(startDate)) return false;
-    if (endDate && d > new Date(endDate)) return false;
-    return matchesSearch;
-  });
-
-  const totalVendas = filteredVendas.reduce((sum, v) => sum + v.valor_total, 0);
-
-  if (loading) return <div style={styles.loading}>Carregando...</div>;
 
   return (
-    <div>
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>💰 Vendas</h1>
-          <p style={styles.subtitle}>{vendas.length} vendas registradas</p>
-        </div>
-        <div style={styles.headerRight}>
-          <span style={styles.headerBadge}>💰 Total: R$ {totalVendas.toFixed(2)}</span>
-          <div style={{display:'flex', gap:8}}>
-            <button style={styles.btnPrimary} onClick={() => setShowForm(!showForm)}>
-              {showForm ? '✕ Cancelar' : '➕ Nova Venda'}
-            </button>
-            <button style={styles.btnSecondary} onClick={() => {
-              const csv = toCSV(filteredVendas, ['id_venda','produto_nome','quantidade','preco_unitario_praticado','valor_total','data']);
-              downloadCSV('vendas_export.csv', csv);
-            }}>📤 Exportar CSV</button>
-          </div>
-        </div>
-      </div>
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4">Vendas</Typography>
+        <Button variant="contained" startIcon={<Receipt />}>
+          Nova Venda
+        </Button>
+      </Box>
 
-      <div style={styles.searchBar}>
-        <input
-          type="text"
-          placeholder="🔍 Buscar venda por produto ou ID..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={styles.searchInput}
-        />
-        <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
-          <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }} style={{...styles.input, padding: '0.5rem'}} />
-          <input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }} style={{...styles.input, padding: '0.5rem'}} />
-          <span style={styles.searchResult}>{filteredVendas.length} resultados</span>
-        </div>
-      </div>
-
-      <div style={styles.resumo}>
-        <div style={styles.resumoCard}>
-          <span style={styles.resumoIcon}>💰</span>
-          <div>
-            <span style={styles.resumoValor}>R$ {totalVendas.toFixed(2)}</span>
-            <span style={styles.resumoLabel}>Total em Vendas</span>
-          </div>
-        </div>
-        <div style={styles.resumoCard}>
-          <span style={styles.resumoIcon}>📦</span>
-          <div>
-            <span style={styles.resumoValor}>{filteredVendas.length}</span>
-            <span style={styles.resumoLabel}>Total de Vendas</span>
-          </div>
-        </div>
-        <div style={styles.resumoCard}>
-          <span style={styles.resumoIcon}>📊</span>
-          <div>
-            <span style={styles.resumoValor}>{filteredVendas.reduce((sum, v) => sum + v.quantidade, 0)}</span>
-            <span style={styles.resumoLabel}>Itens Vendidos</span>
-          </div>
-        </div>
-      </div>
-
-      {showForm && (
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <h2>📝 Nova Venda</h2>
-          
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Movimentação *</label>
-            <select
-              required
-              value={formData.id_movimentacao}
-              onChange={(e) => {
-                setFormData({ ...formData, id_movimentacao: parseInt(e.target.value) });
-                if (errors.id_movimentacao) setErrors({ ...errors, id_movimentacao: '' });
-              }}
-              style={{ ...styles.select, ...(errors.id_movimentacao ? styles.inputError : {}) }}
-            >
-              <option value={0}>Selecione uma movimentação...</option>
-              {movimentacoes.map((m) => (
-                <option key={m.id_movimentacao} value={m.id_movimentacao}>
-                  {m.produto_nome || `Produto #${m.id_produto}`} - {m.quantidade} unidades
-                </option>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Produto</TableCell>
+              <TableCell>Quantidade</TableCell>
+              <TableCell>Valor Total</TableCell>
+              <TableCell>Data</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="right">Ações</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {vendas
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((venda) => (
+                <TableRow key={venda.id}>
+                  <TableCell>{venda.id}</TableCell>
+                  <TableCell>{venda.produto}</TableCell>
+                  <TableCell>{venda.quantidade}</TableCell>
+                  <TableCell>R$ {venda.valorTotal.toFixed(2)}</TableCell>
+                  <TableCell>{venda.data}</TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={venda.status}
+                      color={getStatusColor(venda.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Button size="small" color="primary" startIcon={<Edit />}>
+                      Editar
+                    </Button>
+                    <Button size="small" color="error" startIcon={<Delete />}>
+                      Excluir
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))}
-            </select>
-            {errors.id_movimentacao && <span style={styles.errorText}>{errors.id_movimentacao}</span>}
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Preço Unitário Praticado (R$) *</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
-              required
-              placeholder="0,00"
-              value={formData.preco_unitario_praticado || ''}
-              onChange={(e) => {
-                const valor = parseFloat(e.target.value) || 0;
-                setFormData({ ...formData, preco_unitario_praticado: valor, valor_total: valor * formData.quantidade });
-                if (errors.preco_unitario_praticado) setErrors({ ...errors, preco_unitario_praticado: '' });
-                if (errors.valor_total) setErrors({ ...errors, valor_total: '' });
-              }}
-              style={{ ...styles.input, ...(errors.preco_unitario_praticado ? styles.inputError : {}) }}
-            />
-            {errors.preco_unitario_praticado && <span style={styles.errorText}>{errors.preco_unitario_praticado}</span>}
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Quantidade *</label>
-            <input
-              type="number"
-              required
-              min="1"
-              placeholder="0"
-              value={formData.quantidade || ''}
-              onChange={(e) => {
-                const qtd = parseInt(e.target.value) || 0;
-                setFormData({ ...formData, quantidade: qtd, valor_total: formData.preco_unitario_praticado * qtd });
-                if (errors.quantidade) setErrors({ ...errors, quantidade: '' });
-                if (errors.valor_total) setErrors({ ...errors, valor_total: '' });
-              }}
-              style={{ ...styles.input, ...(errors.quantidade ? styles.inputError : {}) }}
-            />
-            {errors.quantidade && <span style={styles.errorText}>{errors.quantidade}</span>}
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Valor Total (R$) *</label>
-            <input
-              type="number"
-              step="0.01"
-              required
-              placeholder="0,00"
-              value={formData.valor_total || ''}
-              onChange={(e) => {
-                setFormData({ ...formData, valor_total: parseFloat(e.target.value) || 0 });
-                if (errors.valor_total) setErrors({ ...errors, valor_total: '' });
-              }}
-              style={{ ...styles.input, ...(errors.valor_total ? styles.inputError : {}) }}
-            />
-            {errors.valor_total && <span style={styles.errorText}>{errors.valor_total}</span>}
-          </div>
-
-          <div style={styles.formActions}>
-            <button type="button" style={styles.btnSecondary} onClick={handleCancel}>
-              Cancelar
-            </button>
-            <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
-              {isSubmitting ? 'Salvando...' : 'Registrar Venda'}
-            </button>
-          </div>
-        </form>
-      )}
-
-      <div style={styles.tableContainer}>
-        <div style={styles.tableHeader}>
-          <h3 style={styles.tableTitle}>📋 Histórico de Vendas</h3>
-          <span style={styles.tableBadge}>{filteredVendas.length} vendas</span>
-        </div>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>ID</th>
-              <th style={styles.th}>Produto</th>
-              <th style={styles.th}>Preço Unitário</th>
-              <th style={styles.th}>Quantidade</th>
-              <th style={styles.th}>Valor Total</th>
-              <th style={styles.th}>Data</th>
-              <th style={styles.th}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredVendas.slice((currentPage-1)*pageSize, currentPage*pageSize).map((v) => (
-              <tr key={v.id_venda}>
-                <td style={styles.td}>{v.id_venda}</td>
-                <td style={styles.td}><strong>{v.produto_nome || 'N/A'}</strong></td>
-                <td style={styles.td}>R$ {v.preco_unitario_praticado.toFixed(2)}</td>
-                <td style={styles.td}>{v.quantidade}</td>
-                <td style={{ ...styles.td, color: '#6c5ce7', fontWeight: 700 }}>R$ {v.valor_total.toFixed(2)}</td>
-                <td style={styles.td}>{v.data ? new Date(v.data).toLocaleDateString('pt-BR') : '-'}</td>
-                <td style={styles.td}>
-                  <div style={{display: 'flex', gap: '0.5rem'}}>
-                    <button onClick={() => handleEdit(v)} style={styles.btnSecondary}>✏️ Editar</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr style={styles.footerRow}>
-              <td style={styles.footerText} colSpan={4}>TOTAL:</td>
-              <td style={styles.footerTotal}>R$ {totalVendas.toFixed(2)}</td>
-              <td style={styles.td}></td>
-              <td style={styles.td}></td>
-            </tr>
-          </tfoot>
-        </table>
-        {filteredVendas.length === 0 && <p style={styles.empty}>Nenhuma venda encontrada.</p>}
-
-        {/* Paginação simples */}
-        {filteredVendas.length > pageSize && (
-          <div style={{display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem'}}>
-            {Array.from({length: Math.ceil(filteredVendas.length / pageSize)}, (_, i) => i + 1).map(p => (
-              <button key={p} onClick={() => setCurrentPage(p)} style={{padding: '0.4rem 0.7rem', borderRadius: 6, backgroundColor: p === currentPage ? '#6c5ce7' : 'transparent', color: p === currentPage ? '#fff' : '#d0d0e0', border: '1px solid rgba(255,255,255,0.04)'}}>{p}</button>
-            ))}
-          </div>
-        )}
-        {filteredVendas.length === 0 && <p style={styles.empty}>Nenhuma venda encontrada.</p>}
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={vendas.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Itens por página"
+        />
+      </TableContainer>
+    </Container>
   );
-};
-
-const styles = {
-  loading: { textAlign: 'center' as const, padding: '3rem', color: '#a29bfe' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap' as const, gap: '0.5rem' },
-  subtitle: { fontSize: '0.9rem', color: '#8888a0', margin: '0.25rem 0 0' },
-  headerRight: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' as const },
-  headerBadge: { fontSize: '1rem', color: '#a29bfe', fontWeight: 600, backgroundColor: 'rgba(108,92,231,0.1)', padding: '0.3rem 1rem', borderRadius: '20px' },
-  title: { fontSize: '1.75rem', fontWeight: 700, color: '#d0d0e0', margin: 0 },
-  btnPrimary: { padding: '0.6rem 1.5rem', backgroundColor: '#6c5ce7', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
-  btnSecondary: { padding: '0.6rem 1.5rem', backgroundColor: '#2d1b69', color: '#a29bfe', border: '1px solid rgba(108,92,231,0.2)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
-  searchBar: { display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center', flexWrap: 'wrap' as const },
-  searchInput: { flex: 1, padding: '0.7rem 1rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', minWidth: '200px', background: '#1a1730', color: '#d0d0e0' },
-  searchResult: { fontSize: '0.85rem', color: '#8888a0' },
-  resumo: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' },
-  resumoCard: { background: '#1a1730', borderRadius: '12px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)' },
-  resumoIcon: { fontSize: '2.2rem' },
-  resumoValor: { fontSize: '1.8rem', fontWeight: 700, color: '#d0d0e0', display: 'block' },
-  resumoLabel: { fontSize: '0.9rem', color: '#8888a0' },
-  form: { background: '#1a1730', padding: '2rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid rgba(108,92,231,0.1)' },
-  formGroup: { marginBottom: '1rem' },
-  label: { display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: '#a0a0b8', fontSize: '0.9rem' },
-  input: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
-  inputError: { borderColor: '#e74c3c', boxShadow: '0 0 0 2px rgba(231,76,60,0.1)' },
-  errorText: { color: '#e74c3c', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' },
-  select: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
-  formActions: { display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' },
-  tableContainer: { background: '#120f20', borderRadius: '16px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto' as const },
-  tableHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' },
-  tableTitle: { fontSize: '1.1rem', fontWeight: 600, color: '#d0d0e0', margin: 0 },
-  tableBadge: { fontSize: '0.9rem', color: '#a29bfe', backgroundColor: 'rgba(108,92,231,0.1)', padding: '0.2rem 0.8rem', borderRadius: '20px', fontWeight: 600 },
-  table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: '1rem' },
-  th: { fontSize: '1rem', fontWeight: 700, color: '#8888a0', padding: '0.75rem 0.5rem', textAlign: 'left' as const, borderBottom: '1px solid rgba(255,255,255,0.05)' },
-  td: { fontSize: '1rem', padding: '0.6rem 0.5rem', color: '#b0b0c8' },
-  footerRow: { borderTop: '1px solid rgba(255,255,255,0.05)', fontWeight: 'bold' },
-  footerText: { textAlign: 'right' as const, padding: '0.6rem 0.5rem', color: '#b0b0c8' },
-  footerTotal: { color: '#6c5ce7', fontWeight: 700, padding: '0.6rem 0.5rem' },
-  empty: { textAlign: 'center' as const, padding: '2rem', color: '#8888a0' },
 };
 
 export default VendaPage;
