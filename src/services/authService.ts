@@ -1,10 +1,11 @@
-import { authApi } from'../api/authApi';
-import { LoginRequest, LoginResponse, Usuario } from '../models/Usuario';
+import { authApi } from '../api/authApi';
+import { LoginRequest, LoginResponse } from '../models/Usuario';
 
 interface AuthUser {
   email: string;
   nome: string;
   token: string;
+  perfis?: string[];
 }
 
 class AuthService {
@@ -13,15 +14,8 @@ class AuthService {
   private user: AuthUser | null = null;
 
   private constructor() {
-    this.token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        this.user = JSON.parse(userStr);
-      } catch {
-        this.user = null;
-      }
-    }
+    this.token = null;
+    this.user = null;
   }
 
   static getInstance(): AuthService {
@@ -35,12 +29,12 @@ class AuthService {
     try {
       const response = await authApi.login(credentials);
       
-      // Salvar token e dados do usuário
       this.setToken(response.token);
       this.setUser({
         email: response.email,
         nome: response.nome,
-        token: response.token
+        token: response.token,
+        perfis: response.perfis || ['USER']
       });
       
       return response;
@@ -52,22 +46,20 @@ class AuthService {
   logout(): void {
     this.clearToken();
     this.clearUser();
-    // Opcional: chamar API de logout
-    // authApi.logout().catch(console.error);
   }
 
   getToken(): string | null {
-    return this.token || localStorage.getItem('token');
+    return this.token || sessionStorage.getItem('token');
   }
 
   setToken(token: string): void {
     this.token = token;
-    localStorage.setItem('token', token);
+    sessionStorage.setItem('token', token);
   }
 
   clearToken(): void {
     this.token = null;
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
   }
 
   getUser(): AuthUser | null {
@@ -76,12 +68,12 @@ class AuthService {
 
   setUser(user: AuthUser): void {
     this.user = user;
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('user', JSON.stringify(user));
   }
 
   clearUser(): void {
     this.user = null;
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
   }
 
   isAuthenticated(): boolean {

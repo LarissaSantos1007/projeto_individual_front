@@ -30,7 +30,8 @@ function App() {
             pauseOnFocusLoss
             draggable
             pauseOnHover
-            theme="light"
+            theme="dark"
+            style={{ zIndex: 9999 }}
           />
           
           <Navbar />

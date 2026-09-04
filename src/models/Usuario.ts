@@ -17,4 +17,5 @@ export interface LoginResponse {
   nome: string;
   tipo: string;
   expiresIn: number;
+  perfis?: string[];
 }

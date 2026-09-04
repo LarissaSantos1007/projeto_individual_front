@@ -1,39 +1,28 @@
-import api from './api';
-import { LoginRequest, LoginResponse } from '../models/Usuario';
+import axios from 'axios';
 
-export const authApi = {
-  // Fazer login
-  login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>('/auth/login', credentials);
-    return response.data;
+const API_BASE_URL = 'http://localhost:8080/api';
+
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
   },
+  timeout: 10000,
+});
 
-  // Logout (apenas limpa o token no cliente)
-  logout: async (): Promise<void> => {
-    // Não precisa chamar o backend, apenas limpar o token local
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  },
-
-  // Verificar se o token é válido
-  validateToken: async (): Promise<boolean> => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return false;
-      
-      // Opcional: chamar endpoint de validação do token
-      // const response = await api.get('/auth/validate');
-      // return response.status === 200;
-      
-      return true;
-    } catch {
-      return false;
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      console.error('Erro na resposta da API:', error.response.data);
+      const message = error.response.data?.message || 'Erro ao processar requisição';
+      throw new Error(message);
+    } else if (error.request) {
+      console.error('Erro na requisição:', error.request);
+      throw new Error('Serviço indisponível, tente novamente mais tarde');
+    } else {
+      console.error('Erro:', error.message);
+      throw new Error('Erro desconhecido ao processar requisição');
     }
-  },
-
-  // Buscar dados do usuário logado
-  getCurrentUser: async (): Promise<any> => {
-    const response = await api.get('/auth/me');
-    return response.data;
   }
-};
+);
