@@ -38,6 +38,7 @@ const MOVIMENTACOES_EXEMPLO: Movimentacao[] = [
   { id_movimentacao: 17, id_produto: 11, tipo: 'RETIRADA', quantidade: 2, data: new Date(Date.now() - 86400000 * 9).toISOString(), observacao: 'Venda de roteadores', motivo: 'VENDA', produto_nome: 'Roteador TP-Link' },
   { id_movimentacao: 18, id_produto: 12, tipo: 'ENTRADA', quantidade: 3, data: new Date(Date.now() - 86400000 * 4).toISOString(), observacao: 'Placas de vídeo RTX', motivo: 'COMPRA', produto_nome: 'Placa de Vídeo NVIDIA' },
   { id_movimentacao: 19, id_produto: 13, tipo: 'ENTRADA', quantidade: 5, data: new Date(Date.now() - 86400000 * 2).toISOString(), observacao: 'Processadores Intel', motivo: 'COMPRA', produto_nome: 'Processador Intel' },
+  { id_movimentacao: 20, id_produto: 2, tipo: 'ENTRADA', quantidade: 45, data: new Date(Date.now() - 86400000 * 0).toISOString(), observacao: 'Novo lote de smartphones', motivo: 'COMPRA', produto_nome: 'Smartphone Samsung' },
 ];
 
 const PRODUTOS_EXEMPLO: Produto[] = [
@@ -61,6 +62,7 @@ const MovimentacaoPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     id_produto: 0,
     tipo: 'ENTRADA' as 'ENTRADA' | 'RETIRADA',
@@ -76,7 +78,8 @@ const MovimentacaoPage: React.FC = () => {
         api.get('/produtos'),
       ]);
       if (movRes.data && movRes.data.length > 0) {
-        setMovimentacoes(movRes.data);
+        const sorted = [...movRes.data].sort((a, b) => (a.id_movimentacao || 0) - (b.id_movimentacao || 0));
+        setMovimentacoes(sorted);
       }
       if (prodRes.data && prodRes.data.length > 0) {
         setProdutos(prodRes.data);
@@ -90,10 +93,41 @@ const MovimentacaoPage: React.FC = () => {
     setTimeout(loadData, 100);
   }, []);
 
+  // ===== VALIDAÇÕES =====
+  const validarCampos = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+
+    if (formData.id_produto === 0) {
+      newErrors.id_produto = 'Selecione um produto!';
+      isValid = false;
+    }
+
+    if (formData.quantidade <= 0) {
+      newErrors.quantidade = 'Quantidade deve ser maior que zero!';
+      isValid = false;
+    } else if (!Number.isInteger(formData.quantidade)) {
+      newErrors.quantidade = 'Quantidade deve ser um número inteiro!';
+      isValid = false;
+    } else if (formData.quantidade > 100) {
+      newErrors.quantidade = 'Quantidade não pode ser maior que 100!';
+      isValid = false;
+    }
+
+    if (!formData.motivo) {
+      newErrors.motivo = 'Motivo é obrigatório!';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.id_produto === 0 || formData.quantidade <= 0) {
-      toast.error('Preencha todos os campos!');
+    
+    if (!validarCampos()) {
+      toast.error('Corrija os erros antes de continuar!');
       return;
     }
 
@@ -111,11 +145,13 @@ const MovimentacaoPage: React.FC = () => {
       motivo: formData.motivo,
       produto_nome: produto?.nome || 'N/A',
     };
-    setMovimentacoes([novaMov, ...movimentacoes]);
+    const novasMovimentacoes = [...movimentacoes, novaMov].sort((a, b) => (a.id_movimentacao || 0) - (b.id_movimentacao || 0));
+    setMovimentacoes(novasMovimentacoes);
     toast.success('Movimentação criada! ✅');
     
     setShowForm(false);
     setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
+    setErrors({});
     setIsSubmitting(false);
 
     try {
@@ -124,9 +160,15 @@ const MovimentacaoPage: React.FC = () => {
         data: new Date().toISOString(),
       });
       await loadData();
-    } catch (error) {
-      console.log('Não sincronizado');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Erro ao criar!');
     }
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
+    setErrors({});
   };
 
   const getProdutoNome = (id: number) => {
@@ -175,38 +217,103 @@ const MovimentacaoPage: React.FC = () => {
       {showForm && (
         <form onSubmit={handleSubmit} style={styles.form}>
           <h2>📝 Nova Movimentação</h2>
-          <select required value={formData.id_produto} onChange={(e) => setFormData({ ...formData, id_produto: parseInt(e.target.value) })} style={styles.select}>
-            <option value={0}>Selecione um produto...</option>
-            {produtos.map((p) => (
-              <option key={p.id_produto} value={p.id_produto}>{p.nome}</option>
-            ))}
-          </select>
-          <select required value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'ENTRADA' | 'RETIRADA' })} style={styles.select}>
-            <option value="ENTRADA">📥 ENTRADA</option>
-            <option value="RETIRADA">📤 RETIRADA</option>
-          </select>
-          <input type="number" required min="1" max="100" step="1" placeholder="Quantidade (máx 100)" value={formData.quantidade || ''} onChange={(e) => {
-            const valor = parseInt(e.target.value);
-            if (valor > 100) {
-              toast.error('Quantidade não pode ser maior que 100!');
-              e.target.value = '100';
-              setFormData({ ...formData, quantidade: 100 });
-              return;
-            }
-            setFormData({ ...formData, quantidade: valor || 0 });
-          }} style={styles.input} />
-          <select required value={formData.motivo} onChange={(e) => setFormData({ ...formData, motivo: e.target.value })} style={styles.select}>
-            <option value="COMPRA">COMPRA</option>
-            <option value="VENDA">VENDA</option>
-            <option value="USO_INTERNO">USO INTERNO</option>
-            <option value="DEVOLUCAO">DEVOLUÇÃO</option>
-            <option value="PERDA">PERDA</option>
-            <option value="AJUSTE">AJUSTE</option>
-          </select>
-          <input placeholder="Observação (opcional)" value={formData.observacao} onChange={(e) => setFormData({ ...formData, observacao: e.target.value })} style={styles.input} />
-          <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
-            {isSubmitting ? 'Salvando...' : 'Salvar Movimentação'}
-          </button>
+          
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Produto *</label>
+            <select
+              required
+              value={formData.id_produto}
+              onChange={(e) => {
+                setFormData({ ...formData, id_produto: parseInt(e.target.value) });
+                if (errors.id_produto) setErrors({ ...errors, id_produto: '' });
+              }}
+              style={{ ...styles.select, ...(errors.id_produto ? styles.inputError : {}) }}
+            >
+              <option value={0}>Selecione um produto...</option>
+              {produtos.map((p) => (
+                <option key={p.id_produto} value={p.id_produto}>{p.nome}</option>
+              ))}
+            </select>
+            {errors.id_produto && <span style={styles.errorText}>{errors.id_produto}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Tipo *</label>
+            <select
+              required
+              value={formData.tipo}
+              onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'ENTRADA' | 'RETIRADA' })}
+              style={styles.select}
+            >
+              <option value="ENTRADA">📥 ENTRADA</option>
+              <option value="RETIRADA">📤 RETIRADA</option>
+            </select>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Quantidade *</label>
+            <input
+              type="number"
+              required
+              min="1"
+              max="100"
+              step="1"
+              placeholder="Quantidade (máx 100)"
+              value={formData.quantidade || ''}
+              onChange={(e) => {
+                const valor = parseInt(e.target.value) || 0;
+                if (valor > 100) {
+                  toast.error('Quantidade não pode ser maior que 100!');
+                  setFormData({ ...formData, quantidade: 100 });
+                  return;
+                }
+                setFormData({ ...formData, quantidade: valor });
+                if (errors.quantidade) setErrors({ ...errors, quantidade: '' });
+              }}
+              style={{ ...styles.input, ...(errors.quantidade ? styles.inputError : {}) }}
+            />
+            {errors.quantidade && <span style={styles.errorText}>{errors.quantidade}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Motivo *</label>
+            <select
+              required
+              value={formData.motivo}
+              onChange={(e) => {
+                setFormData({ ...formData, motivo: e.target.value });
+                if (errors.motivo) setErrors({ ...errors, motivo: '' });
+              }}
+              style={{ ...styles.select, ...(errors.motivo ? styles.inputError : {}) }}
+            >
+              <option value="COMPRA">COMPRA</option>
+              <option value="VENDA">VENDA</option>
+              <option value="USO_INTERNO">USO INTERNO</option>
+              <option value="DEVOLUCAO">DEVOLUÇÃO</option>
+              <option value="PERDA">PERDA</option>
+              <option value="AJUSTE">AJUSTE</option>
+            </select>
+            {errors.motivo && <span style={styles.errorText}>{errors.motivo}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Observação</label>
+            <input
+              placeholder="Observação (opcional)"
+              value={formData.observacao}
+              onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formActions}>
+            <button type="button" style={styles.btnSecondary} onClick={handleCancel}>
+              Cancelar
+            </button>
+            <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
+              {isSubmitting ? 'Salvando...' : 'Salvar Movimentação'}
+            </button>
+          </div>
         </form>
       )}
 
@@ -250,14 +357,20 @@ const styles = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap' as const, gap: '0.5rem' },
   title: { fontSize: '1.75rem', fontWeight: 700, color: '#d0d0e0', margin: 0 },
   btnPrimary: { padding: '0.6rem 1.5rem', backgroundColor: '#6c5ce7', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
+  btnSecondary: { padding: '0.6rem 1.5rem', backgroundColor: '#2d1b69', color: '#a29bfe', border: '1px solid rgba(108,92,231,0.2)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 },
   resumo: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' },
   resumoCard: { background: '#1a1730', borderRadius: '12px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)' },
   resumoIcon: { fontSize: '2.2rem' },
   resumoValor: { fontSize: '1.8rem', fontWeight: 700, color: '#d0d0e0', display: 'block' },
   resumoLabel: { fontSize: '0.9rem', color: '#8888a0' },
   form: { background: '#1a1730', padding: '2rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid rgba(108,92,231,0.1)' },
-  input: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
-  select: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  formGroup: { marginBottom: '1rem' },
+  label: { display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: '#a0a0b8', fontSize: '0.9rem' },
+  input: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  inputError: { borderColor: '#e74c3c', boxShadow: '0 0 0 2px rgba(231,76,60,0.1)' },
+  errorText: { color: '#e74c3c', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' },
+  select: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  formActions: { display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' },
   tableContainer: { background: '#120f20', borderRadius: '16px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto' as const },
   tableHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' },
   tableTitle: { fontSize: '1.1rem', fontWeight: 600, color: '#d0d0e0', margin: 0 },

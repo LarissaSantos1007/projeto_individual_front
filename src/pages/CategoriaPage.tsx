@@ -49,12 +49,14 @@ const CategoriaPage: React.FC = () => {
   const [formData, setFormData] = useState({ nome: '', descricao: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({ nome: '', descricao: '' });
 
   const loadData = async () => {
     try {
       const res = await api.get('/categorias');
       if (res.data && res.data.length > 0) {
-        setCategorias(res.data);
+        const sorted = [...res.data].sort((a, b) => (a.id_categoria || 0) - (b.id_categoria || 0));
+        setCategorias(sorted);
       }
     } catch (error) {
       console.log('Usando dados locais');
@@ -65,10 +67,42 @@ const CategoriaPage: React.FC = () => {
     setTimeout(loadData, 100);
   }, []);
 
+  // ===== VALIDAÇÕES =====
+  const validarCampos = (): boolean => {
+    const newErrors = { nome: '', descricao: '' };
+    let isValid = true;
+
+    // Valida nome
+    if (!formData.nome.trim()) {
+      newErrors.nome = 'Nome da categoria é obrigatório!';
+      isValid = false;
+    } else if (formData.nome.length < 3) {
+      newErrors.nome = 'Nome deve ter no mínimo 3 caracteres!';
+      isValid = false;
+    } else if (formData.nome.length > 50) {
+      newErrors.nome = 'Nome deve ter no máximo 50 caracteres!';
+      isValid = false;
+    } else if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(formData.nome)) {
+      newErrors.nome = 'Nome deve conter apenas letras e espaços!';
+      isValid = false;
+    }
+
+    // Valida descrição (opcional)
+    if (formData.descricao && formData.descricao.length > 255) {
+      newErrors.descricao = 'Descrição deve ter no máximo 255 caracteres!';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nome.trim()) {
-      toast.error('Nome da categoria é obrigatório!');
+    
+    // Valida antes de enviar
+    if (!validarCampos()) {
+      toast.error('Corrija os erros antes de continuar!');
       return;
     }
 
@@ -84,26 +118,28 @@ const CategoriaPage: React.FC = () => {
       try {
         await api.put(`/categorias/${editing.id_categoria}`, formData);
         await loadData();
-      } catch (error) {
-        console.log('Não sincronizado');
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao atualizar!');
       }
     } else {
       const novoId = categorias.length > 0 ? Math.max(...categorias.map(c => c.id_categoria || 0)) + 1 : 1;
       const novaCategoria = { ...formData, id_categoria: novoId };
-      setCategorias([...categorias, novaCategoria]);
+      const novasCategorias = [...categorias, novaCategoria].sort((a, b) => (a.id_categoria || 0) - (b.id_categoria || 0));
+      setCategorias(novasCategorias);
       toast.success('Categoria criada! ✅');
       
       try {
         await api.post('/categorias', formData);
         await loadData();
-      } catch (error) {
-        console.log('Não sincronizado');
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao criar!');
       }
     }
     
     setShowForm(false);
     setEditing(null);
     setFormData({ nome: '', descricao: '' });
+    setErrors({ nome: '', descricao: '' });
     setIsSubmitting(false);
   };
 
@@ -113,6 +149,7 @@ const CategoriaPage: React.FC = () => {
       nome: categoria.nome,
       descricao: categoria.descricao || '',
     });
+    setErrors({ nome: '', descricao: '' });
     setShowForm(true);
   };
 
@@ -123,10 +160,17 @@ const CategoriaPage: React.FC = () => {
       try {
         await api.delete(`/categorias/${id}`);
         await loadData();
-      } catch (error) {
-        console.log('Não sincronizado');
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao excluir!');
       }
     }
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditing(null);
+    setFormData({ nome: '', descricao: '' });
+    setErrors({ nome: '', descricao: '' });
   };
 
   const filteredCategorias = categorias.filter(cat =>
@@ -143,7 +187,7 @@ const CategoriaPage: React.FC = () => {
           <h1 style={styles.title}>📂 Categorias</h1>
           <p style={styles.subtitle}>{categorias.length} categorias cadastradas</p>
         </div>
-        <button style={styles.btnPrimary} onClick={() => { setShowForm(true); setEditing(null); setFormData({ nome: '', descricao: '' }); }}>
+        <button style={styles.btnPrimary} onClick={() => { setShowForm(true); setEditing(null); setFormData({ nome: '', descricao: '' }); setErrors({ nome: '', descricao: '' }); }}>
           ➕ Nova Categoria
         </button>
       </div>
@@ -162,21 +206,40 @@ const CategoriaPage: React.FC = () => {
       {showForm && (
         <form onSubmit={handleSubmit} style={styles.form}>
           <h2 style={styles.formTitle}>{editing ? '✏️ Editar Categoria' : '📝 Nova Categoria'}</h2>
-          <input
-            required
-            placeholder="Nome da categoria"
-            value={formData.nome}
-            onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-            style={styles.input}
-          />
-          <input
-            placeholder="Descrição da categoria"
-            value={formData.descricao}
-            onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-            style={styles.input}
-          />
+          
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Nome da Categoria *</label>
+            <input
+              required
+              placeholder="Ex: Eletrônicos"
+              value={formData.nome}
+              onChange={(e) => {
+                setFormData({ ...formData, nome: e.target.value });
+                if (errors.nome) setErrors({ ...errors, nome: '' });
+              }}
+              style={{ ...styles.input, ...(errors.nome ? styles.inputError : {}) }}
+            />
+            {errors.nome && <span style={styles.errorText}>{errors.nome}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Descrição</label>
+            <input
+              placeholder="Descrição da categoria (opcional)"
+              value={formData.descricao}
+              onChange={(e) => {
+                setFormData({ ...formData, descricao: e.target.value });
+                if (errors.descricao) setErrors({ ...errors, descricao: '' });
+              }}
+              style={{ ...styles.input, ...(errors.descricao ? styles.inputError : {}) }}
+            />
+            {errors.descricao && <span style={styles.errorText}>{errors.descricao}</span>}
+          </div>
+
           <div style={styles.formActions}>
-            <button type="button" style={styles.btnSecondary} onClick={() => { setShowForm(false); setEditing(null); }}>Cancelar</button>
+            <button type="button" style={styles.btnSecondary} onClick={handleCancel}>
+              Cancelar
+            </button>
             <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
               {isSubmitting ? 'Salvando...' : (editing ? 'Atualizar' : 'Cadastrar')}
             </button>
@@ -225,7 +288,11 @@ const styles = {
   btnDelete: { padding: '0.25rem 0.6rem', backgroundColor: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
   form: { background: '#1a1730', padding: '2rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid rgba(108,92,231,0.1)' },
   formTitle: { fontSize: '1.3rem', fontWeight: 600, color: '#d0d0e0', marginTop: 0, marginBottom: '1rem' },
-  input: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  formGroup: { marginBottom: '1rem' },
+  label: { display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: '#a0a0b8', fontSize: '0.9rem' },
+  input: { width: '100%', padding: '0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  inputError: { borderColor: '#e74c3c', boxShadow: '0 0 0 2px rgba(231,76,60,0.1)' },
+  errorText: { color: '#e74c3c', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' },
   formActions: { display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' },
   card: { background: '#1a1730', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', transition: 'transform 0.2s, box-shadow 0.2s' },

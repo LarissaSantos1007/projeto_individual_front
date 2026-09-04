@@ -51,6 +51,7 @@ const ProdutoPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('TODOS');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     codigo: '',
     nome: '',
@@ -69,7 +70,8 @@ const ProdutoPage: React.FC = () => {
         api.get('/categorias'),
       ]);
       if (prodRes.data && prodRes.data.length > 0) {
-        setProdutos(prodRes.data);
+        const sorted = [...prodRes.data].sort((a, b) => (a.id_produto || 0) - (b.id_produto || 0));
+        setProdutos(sorted);
       }
       if (catRes.data && catRes.data.length > 0) {
         setCategorias(catRes.data);
@@ -83,10 +85,62 @@ const ProdutoPage: React.FC = () => {
     setTimeout(loadData, 100);
   }, []);
 
+  // ===== VALIDAÇÕES =====
+  const validarCampos = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+
+    if (!formData.codigo.trim()) {
+      newErrors.codigo = 'Código é obrigatório!';
+      isValid = false;
+    } else if (formData.codigo.length < 3) {
+      newErrors.codigo = 'Código deve ter no mínimo 3 caracteres!';
+      isValid = false;
+    } else if (formData.codigo.length > 50) {
+      newErrors.codigo = 'Código deve ter no máximo 50 caracteres!';
+      isValid = false;
+    }
+
+    if (!formData.nome.trim()) {
+      newErrors.nome = 'Nome é obrigatório!';
+      isValid = false;
+    } else if (formData.nome.length < 3) {
+      newErrors.nome = 'Nome deve ter no mínimo 3 caracteres!';
+      isValid = false;
+    } else if (formData.nome.length > 100) {
+      newErrors.nome = 'Nome deve ter no máximo 100 caracteres!';
+      isValid = false;
+    }
+
+    if (formData.id_categoria === 0) {
+      newErrors.id_categoria = 'Categoria é obrigatória!';
+      isValid = false;
+    }
+
+    if (formData.preco_unitario <= 0) {
+      newErrors.preco_unitario = 'Preço deve ser maior que zero!';
+      isValid = false;
+    }
+
+    if (formData.quantidade_disponivel < 0) {
+      newErrors.quantidade_disponivel = 'Quantidade não pode ser negativa!';
+      isValid = false;
+    }
+
+    if (formData.quantidade_minima < 0) {
+      newErrors.quantidade_minima = 'Quantidade mínima não pode ser negativa!';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.codigo.trim() || !formData.nome.trim() || formData.id_categoria === 0 || formData.preco_unitario <= 0) {
-      toast.error('Preencha todos os campos obrigatórios!');
+    
+    if (!validarCampos()) {
+      toast.error('Corrija os erros antes de continuar!');
       return;
     }
 
@@ -100,26 +154,28 @@ const ProdutoPage: React.FC = () => {
       try {
         await api.put(`/produtos/${editing.id_produto}`, formData);
         await loadData();
-      } catch (error) {
-        console.log('Não sincronizado');
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao atualizar!');
       }
     } else {
       const novoId = produtos.length > 0 ? Math.max(...produtos.map(p => p.id_produto || 0)) + 1 : 1;
       const novoProduto = { ...formData, id_produto: novoId };
-      setProdutos([...produtos, novoProduto]);
+      const novosProdutos = [...produtos, novoProduto].sort((a, b) => (a.id_produto || 0) - (b.id_produto || 0));
+      setProdutos(novosProdutos);
       toast.success('Produto criado! ✅');
       
       try {
         await api.post('/produtos', formData);
         await loadData();
-      } catch (error) {
-        console.log('Não sincronizado');
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao criar!');
       }
     }
     
     setShowForm(false);
     setEditing(null);
     setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' });
+    setErrors({});
     setIsSubmitting(false);
   };
 
@@ -135,6 +191,7 @@ const ProdutoPage: React.FC = () => {
       quantidade_minima: produto.quantidade_minima,
       status: produto.status,
     });
+    setErrors({});
     setShowForm(true);
   };
 
@@ -145,10 +202,17 @@ const ProdutoPage: React.FC = () => {
       try {
         await api.delete(`/produtos/${id}`);
         await loadData();
-      } catch (error) {
-        console.log('Não sincronizado');
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao excluir!');
       }
     }
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditing(null);
+    setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' });
+    setErrors({});
   };
 
   const getCategoriaNome = (id: number) => {
@@ -168,7 +232,7 @@ const ProdutoPage: React.FC = () => {
     <div>
       <div style={styles.header}>
         <h1 style={styles.title}>📦 Produtos</h1>
-        <button style={styles.btnPrimary} onClick={() => { setShowForm(true); setEditing(null); setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' }); }}>
+        <button style={styles.btnPrimary} onClick={() => { setShowForm(true); setEditing(null); setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' }); setErrors({}); }}>
           ➕ Novo Produto
         </button>
       </div>
@@ -190,25 +254,137 @@ const ProdutoPage: React.FC = () => {
 
       {showForm && (
         <form onSubmit={handleSubmit} style={styles.form}>
-          <h2>{editing ? '✏️ Editar' : '📝 Novo'} Produto</h2>
-          <input required placeholder="Código" value={formData.codigo} onChange={(e) => setFormData({ ...formData, codigo: e.target.value })} style={styles.input} />
-          <input required placeholder="Nome" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} style={styles.input} />
-          <input placeholder="Descrição" value={formData.descricao} onChange={(e) => setFormData({ ...formData, descricao: e.target.value })} style={styles.input} />
-          <select required value={formData.id_categoria} onChange={(e) => setFormData({ ...formData, id_categoria: parseInt(e.target.value) })} style={styles.select}>
-            <option value={0}>Selecione uma categoria...</option>
-            {categorias.map((c) => (
-              <option key={c.id_categoria} value={c.id_categoria}>{c.nome}</option>
-            ))}
-          </select>
-          <input type="number" step="0.01" required placeholder="Preço" value={formData.preco_unitario || ''} onChange={(e) => setFormData({ ...formData, preco_unitario: parseFloat(e.target.value) || 0 })} style={styles.input} />
-          <input type="number" required placeholder="Quantidade Disponível" value={formData.quantidade_disponivel || ''} onChange={(e) => setFormData({ ...formData, quantidade_disponivel: parseInt(e.target.value) || 0 })} style={styles.input} />
-          <input type="number" required placeholder="Quantidade Mínima" value={formData.quantidade_minima || ''} onChange={(e) => setFormData({ ...formData, quantidade_minima: parseInt(e.target.value) || 0 })} style={styles.input} />
-          <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as 'ATIVO' | 'INATIVO' })} style={styles.select}>
-            <option value="ATIVO">ATIVO</option>
-            <option value="INATIVO">INATIVO</option>
-          </select>
+          <h2>{editing ? '✏️ Editar Produto' : '📝 Novo Produto'}</h2>
+          
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Código *</label>
+            <input
+              required
+              placeholder="Ex: PROD-001"
+              value={formData.codigo}
+              onChange={(e) => {
+                setFormData({ ...formData, codigo: e.target.value });
+                if (errors.codigo) setErrors({ ...errors, codigo: '' });
+              }}
+              style={{ ...styles.input, ...(errors.codigo ? styles.inputError : {}) }}
+            />
+            {errors.codigo && <span style={styles.errorText}>{errors.codigo}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Nome *</label>
+            <input
+              required
+              placeholder="Nome do produto"
+              value={formData.nome}
+              onChange={(e) => {
+                setFormData({ ...formData, nome: e.target.value });
+                if (errors.nome) setErrors({ ...errors, nome: '' });
+              }}
+              style={{ ...styles.input, ...(errors.nome ? styles.inputError : {}) }}
+            />
+            {errors.nome && <span style={styles.errorText}>{errors.nome}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Descrição</label>
+            <input
+              placeholder="Descrição do produto"
+              value={formData.descricao}
+              onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Categoria *</label>
+            <select
+              required
+              value={formData.id_categoria}
+              onChange={(e) => {
+                setFormData({ ...formData, id_categoria: parseInt(e.target.value) });
+                if (errors.id_categoria) setErrors({ ...errors, id_categoria: '' });
+              }}
+              style={{ ...styles.select, ...(errors.id_categoria ? styles.inputError : {}) }}
+            >
+              <option value={0}>Selecione uma categoria...</option>
+              {categorias.map((c) => (
+                <option key={c.id_categoria} value={c.id_categoria}>{c.nome}</option>
+              ))}
+            </select>
+            {errors.id_categoria && <span style={styles.errorText}>{errors.id_categoria}</span>}
+          </div>
+
+          <div style={styles.formRow}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Preço (R$) *</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                required
+                placeholder="0,00"
+                value={formData.preco_unitario || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, preco_unitario: parseFloat(e.target.value) || 0 });
+                  if (errors.preco_unitario) setErrors({ ...errors, preco_unitario: '' });
+                }}
+                style={{ ...styles.input, ...(errors.preco_unitario ? styles.inputError : {}) }}
+              />
+              {errors.preco_unitario && <span style={styles.errorText}>{errors.preco_unitario}</span>}
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Quantidade Disponível *</label>
+              <input
+                type="number"
+                min="0"
+                required
+                placeholder="0"
+                value={formData.quantidade_disponivel || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, quantidade_disponivel: parseInt(e.target.value) || 0 });
+                  if (errors.quantidade_disponivel) setErrors({ ...errors, quantidade_disponivel: '' });
+                }}
+                style={{ ...styles.input, ...(errors.quantidade_disponivel ? styles.inputError : {}) }}
+              />
+              {errors.quantidade_disponivel && <span style={styles.errorText}>{errors.quantidade_disponivel}</span>}
+            </div>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Quantidade Mínima *</label>
+            <input
+              type="number"
+              min="0"
+              required
+              placeholder="0"
+              value={formData.quantidade_minima || ''}
+              onChange={(e) => {
+                setFormData({ ...formData, quantidade_minima: parseInt(e.target.value) || 0 });
+                if (errors.quantidade_minima) setErrors({ ...errors, quantidade_minima: '' });
+              }}
+              style={{ ...styles.input, ...(errors.quantidade_minima ? styles.inputError : {}) }}
+            />
+            {errors.quantidade_minima && <span style={styles.errorText}>{errors.quantidade_minima}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Status</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as 'ATIVO' | 'INATIVO' })}
+              style={styles.select}
+            >
+              <option value="ATIVO">✅ ATIVO</option>
+              <option value="INATIVO">⛔ INATIVO</option>
+            </select>
+          </div>
+
           <div style={styles.formActions}>
-            <button type="button" style={styles.btnSecondary} onClick={() => { setShowForm(false); setEditing(null); }}>Cancelar</button>
+            <button type="button" style={styles.btnSecondary} onClick={handleCancel}>
+              Cancelar
+            </button>
             <button type="submit" style={styles.btnPrimary} disabled={isSubmitting}>
               {isSubmitting ? 'Salvando...' : (editing ? 'Atualizar' : 'Cadastrar')}
             </button>
@@ -255,8 +431,13 @@ const styles = {
   btnEdit: { padding: '0.25rem 0.6rem', backgroundColor: '#6c5ce7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '0.25rem' },
   btnDelete: { padding: '0.25rem 0.6rem', backgroundColor: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
   form: { background: '#1a1730', padding: '2rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid rgba(253,121,168,0.1)' },
-  input: { width: '100%', padding: '0.7rem', border: '1px solid rgba(253,121,168,0.2)', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
-  select: { width: '100%', padding: '0.7rem', border: '1px solid rgba(253,121,168,0.2)', borderRadius: '8px', fontSize: '1rem', marginBottom: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  formGroup: { marginBottom: '1rem' },
+  label: { display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: '#a0a0b8', fontSize: '0.9rem' },
+  input: { width: '100%', padding: '0.7rem', border: '1px solid rgba(253,121,168,0.2)', borderRadius: '8px', fontSize: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  inputError: { borderColor: '#e74c3c', boxShadow: '0 0 0 2px rgba(231,76,60,0.1)' },
+  errorText: { color: '#e74c3c', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' },
+  select: { width: '100%', padding: '0.7rem', border: '1px solid rgba(253,121,168,0.2)', borderRadius: '8px', fontSize: '1rem', outline: 'none', background: '#120f20', color: '#d0d0e0' },
+  formRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' },
   formActions: { display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' },
   gridProdutos: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' },
   cardProduto: { background: '#1a1730', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(253,121,168,0.08)' },
