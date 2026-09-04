@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { api } from '../api/api';
+import { toCSV, downloadCSV } from '../utils/exportCsv';
 
 interface Movimentacao {
   id_movimentacao?: number;
@@ -63,6 +64,10 @@ const MovimentacaoPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<Movimentacao | null>(null);
+  const [filterTipo, setFilterTipo] = useState<'TODOS' | 'ENTRADA' | 'RETIRADA'>('TODOS');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
   const [formData, setFormData] = useState({
     id_produto: 0,
     tipo: 'ENTRADA' as 'ENTRADA' | 'RETIRADA',
@@ -134,35 +139,54 @@ const MovimentacaoPage: React.FC = () => {
     setIsSubmitting(true);
 
     const produto = produtos.find(p => p.id_produto === formData.id_produto);
-    const novoId = movimentacoes.length > 0 ? Math.max(...movimentacoes.map(m => m.id_movimentacao || 0)) + 1 : 1;
-    const novaMov = {
-      id_movimentacao: novoId,
-      id_produto: formData.id_produto,
-      tipo: formData.tipo,
-      quantidade: formData.quantidade,
-      data: new Date().toISOString(),
-      observacao: formData.observacao || '',
-      motivo: formData.motivo,
-      produto_nome: produto?.nome || 'N/A',
-    };
-    const novasMovimentacoes = [...movimentacoes, novaMov].sort((a, b) => (a.id_movimentacao || 0) - (b.id_movimentacao || 0));
-    setMovimentacoes(novasMovimentacoes);
-    toast.success('Movimentação criada! ✅');
-    
+
+    if (editing) {
+      const updated = { ...editing, ...formData, produto_nome: produto?.nome || editing.produto_nome } as Movimentacao;
+      setMovimentacoes(movimentacoes.map(m => m.id_movimentacao === editing.id_movimentacao ? updated : m));
+      toast.success('Movimentação atualizada! ✅');
+      try {
+        await api.put(`/movimentacoes/${editing.id_movimentacao}`, { ...formData, data: new Date().toISOString() });
+        await loadData();
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao atualizar!');
+      }
+      setEditing(null);
+    } else {
+      const novoId = movimentacoes.length > 0 ? Math.max(...movimentacoes.map(m => m.id_movimentacao || 0)) + 1 : 1;
+      const novaMov = {
+        id_movimentacao: novoId,
+        id_produto: formData.id_produto,
+        tipo: formData.tipo,
+        quantidade: formData.quantidade,
+        data: new Date().toISOString(),
+        observacao: formData.observacao || '',
+        motivo: formData.motivo,
+        produto_nome: produto?.nome || 'N/A',
+      };
+      const novasMovimentacoes = [...movimentacoes, novaMov].sort((a, b) => (a.id_movimentacao || 0) - (b.id_movimentacao || 0));
+      setMovimentacoes(novasMovimentacoes);
+      toast.success('Movimentação criada! ✅');
+      try {
+        await api.post('/movimentacoes', {
+          ...formData,
+          data: new Date().toISOString(),
+        });
+        await loadData();
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao criar!');
+      }
+    }
+
     setShowForm(false);
     setFormData({ id_produto: 0, tipo: 'ENTRADA', quantidade: 0, motivo: 'COMPRA', observacao: '' });
     setErrors({});
     setIsSubmitting(false);
+  };
 
-    try {
-      await api.post('/movimentacoes', {
-        ...formData,
-        data: new Date().toISOString(),
-      });
-      await loadData();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Erro ao criar!');
-    }
+  const handleEdit = (mov: Movimentacao) => {
+    setEditing(mov);
+    setFormData({ id_produto: mov.id_produto, tipo: mov.tipo, quantidade: mov.quantidade, motivo: mov.motivo, observacao: mov.observacao || '' });
+    setShowForm(true);
   };
 
   const handleCancel = () => {
@@ -185,9 +209,15 @@ const MovimentacaoPage: React.FC = () => {
     <div>
       <div style={styles.header}>
         <h1 style={styles.title}>🔄 Movimentações</h1>
-        <button style={styles.btnPrimary} onClick={() => setShowForm(!showForm)}>
-          {showForm ? '✕ Cancelar' : '➕ Nova Movimentação'}
-        </button>
+        <div style={{display:'flex', gap:8}}>
+          <button style={styles.btnPrimary} onClick={() => setShowForm(!showForm)}>
+            {showForm ? '✕ Cancelar' : '➕ Nova Movimentação'}
+          </button>
+          <button style={styles.btnSecondary} onClick={() => {
+            const csv = toCSV(movimentacoes.filter(m => filterTipo === 'TODOS' ? true : m.tipo === filterTipo), ['id_movimentacao','produto_nome','tipo','quantidade','data','motivo']);
+            downloadCSV('movimentacoes_export.csv', csv);
+          }}>📤 Exportar CSV</button>
+        </div>
       </div>
 
       <div style={styles.resumo}>
@@ -218,24 +248,35 @@ const MovimentacaoPage: React.FC = () => {
         <form onSubmit={handleSubmit} style={styles.form}>
           <h2>📝 Nova Movimentação</h2>
           
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Produto *</label>
-            <select
-              required
-              value={formData.id_produto}
-              onChange={(e) => {
-                setFormData({ ...formData, id_produto: parseInt(e.target.value) });
-                if (errors.id_produto) setErrors({ ...errors, id_produto: '' });
-              }}
-              style={{ ...styles.select, ...(errors.id_produto ? styles.inputError : {}) }}
-            >
-              <option value={0}>Selecione um produto...</option>
-              {produtos.map((p) => (
-                <option key={p.id_produto} value={p.id_produto}>{p.nome}</option>
-              ))}
-            </select>
-            {errors.id_produto && <span style={styles.errorText}>{errors.id_produto}</span>}
+          <div style={{display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center'}}>
+            <div style={{flex: 1}}>
+              <label style={styles.label}>Produto *</label>
+              <select
+                required
+                value={formData.id_produto}
+                onChange={(e) => {
+                  setFormData({ ...formData, id_produto: parseInt(e.target.value) });
+                  if (errors.id_produto) setErrors({ ...errors, id_produto: '' });
+                }}
+                style={{ ...styles.select, ...(errors.id_produto ? styles.inputError : {}) }}
+              >
+                <option value={0}>Selecione um produto...</option>
+                {produtos.map((p) => (
+                  <option key={p.id_produto} value={p.id_produto}>{p.nome}</option>
+                ))}
+              </select>
+              {errors.id_produto && <span style={styles.errorText}>{errors.id_produto}</span>}
+            </div>
+            <div style={{width: 200}}>
+              <label style={styles.label}>Filtrar Tipo</label>
+              <select value={filterTipo} onChange={(e) => { setFilterTipo(e.target.value as any); setCurrentPage(1); }} style={styles.select}>
+                <option value="TODOS">Todos</option>
+                <option value="ENTRADA">📥 ENTRADA</option>
+                <option value="RETIRADA">📤 RETIRADA</option>
+              </select>
+            </div>
           </div>
+          
 
           <div style={styles.formGroup}>
             <label style={styles.label}>Tipo *</label>
@@ -322,30 +363,35 @@ const MovimentacaoPage: React.FC = () => {
           <h3 style={styles.tableTitle}>📋 Histórico de Movimentações</h3>
           <span style={styles.tableBadge}>{movimentacoes.length} registros</span>
         </div>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>ID</th>
-              <th style={styles.th}>Produto</th>
-              <th style={styles.th}>Tipo</th>
-              <th style={styles.th}>Quantidade</th>
-              <th style={styles.th}>Motivo</th>
-              <th style={styles.th}>Data</th>
-            </tr>
-          </thead>
-          <tbody>
-            {movimentacoes.map((m) => (
-              <tr key={m.id_movimentacao} style={m.tipo === 'ENTRADA' ? styles.rowEntrada : styles.rowSaida}>
-                <td style={styles.td}>{m.id_movimentacao}</td>
-                <td style={styles.td}><strong>{m.produto_nome || getProdutoNome(m.id_produto)}</strong></td>
-                <td style={styles.td}>{m.tipo === 'ENTRADA' ? '📥 ENTRADA' : '📤 RETIRADA'}</td>
-                <td style={styles.td}><strong>{m.quantidade}</strong></td>
-                <td style={styles.td}>{m.motivo}</td>
-                <td style={styles.td}>{new Date(m.data).toLocaleDateString('pt-BR')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* paginated & filtered table */}
+        <div style={{marginBottom: '0.75rem'}}>
+          <div style={{display: 'grid', gridTemplateColumns: '80px 1fr 120px 100px 120px', gap: '0.5rem', padding: '0.5rem 0', color: '#8888a0'}}>
+            <div style={styles.th}>ID</div>
+            <div style={styles.th}>Produto</div>
+            <div style={styles.th}>Tipo</div>
+            <div style={styles.th}>Quantidade</div>
+            <div style={styles.th}>Data</div>
+          </div>
+          {(movimentacoes.filter(m => filterTipo === 'TODOS' ? true : m.tipo === filterTipo).slice((currentPage-1)*pageSize, currentPage*pageSize)).map((m) => (
+            <div key={m.id_movimentacao} style={{...styles.tableRow, ...(m.tipo === 'ENTRADA' ? styles.rowEntrada : styles.rowSaida)}}>
+              <div style={styles.td}>{m.id_movimentacao}</div>
+              <div style={styles.td}><strong>{m.produto_nome || getProdutoNome(m.id_produto)}</strong></div>
+              <div style={styles.td}>{m.tipo === 'ENTRADA' ? '📥 ENTRADA' : '📤 RETIRADA'}</div>
+              <div style={styles.td}><strong>{m.quantidade}</strong></div>
+              <div style={styles.td}>{new Date(m.data).toLocaleDateString('pt-BR')}</div>
+              <div style={{display:'flex', gap:'0.5rem'}}>
+                <button style={styles.btnEdit} onClick={() => handleEdit(m)}>✏️</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* pagination */}
+        <div style={{display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem'}}>
+          {Array.from({length: Math.max(1, Math.ceil(movimentacoes.filter(m => filterTipo === 'TODOS' ? true : m.tipo === filterTipo).length / pageSize))}).map((_, idx) => (
+            <button key={idx} onClick={() => setCurrentPage(idx+1)} style={{padding: '0.4rem 0.7rem', background: currentPage===idx+1?'#6c5ce7':'transparent', color: currentPage===idx+1?'#fff':'#b0b0c8', border:'1px solid rgba(255,255,255,0.04)', borderRadius:6}}>{idx+1}</button>
+          ))}
+        </div>
         {movimentacoes.length === 0 && <p style={styles.empty}>Nenhuma movimentação registrada.</p>}
       </div>
     </div>
@@ -376,6 +422,8 @@ const styles = {
   tableTitle: { fontSize: '1.1rem', fontWeight: 600, color: '#d0d0e0', margin: 0 },
   tableBadge: { fontSize: '0.9rem', color: '#a29bfe', backgroundColor: 'rgba(108,92,231,0.1)', padding: '0.2rem 0.8rem', borderRadius: '20px', fontWeight: 600 },
   table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: '1rem' },
+  tableRow: { display: 'grid', gridTemplateColumns: '80px 1fr 120px 100px 120px', padding: '0.5rem 0.75rem', borderRadius: '6px', alignItems: 'center', color: '#b0b0c8' },
+  btnEdit: { padding: '0.25rem 0.6rem', backgroundColor: '#6c5ce7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
   th: { fontSize: '1rem', fontWeight: 700, color: '#8888a0', padding: '0.75rem 0.5rem', textAlign: 'left' as const, borderBottom: '1px solid rgba(255,255,255,0.05)' },
   td: { fontSize: '1rem', padding: '0.6rem 0.5rem', color: '#b0b0c8' },
   rowEntrada: { borderLeft: '4px solid #28a745', background: 'rgba(40,167,69,0.05)' },

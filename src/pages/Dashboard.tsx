@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/api';
+import SimpleChart from '../components/SimpleChart';
 
 const DADOS_EXEMPLO = {
   produtos: [
@@ -33,6 +34,10 @@ const Dashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [ultimosProdutos, setUltimosProdutos] = useState(DADOS_EXEMPLO.produtos);
+  const [salesLabels, setSalesLabels] = useState<string[]>([]);
+  const [salesData, setSalesData] = useState<number[]>([]);
+  const [movLabels, setMovLabels] = useState<string[]>(['ENTRADA','RETIRADA']);
+  const [movData, setMovData] = useState<number[]>([0,0]);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -40,10 +45,14 @@ const Dashboard: React.FC = () => {
         const [produtosRes, categoriasRes] = await Promise.all([
           api.get('/produtos'),
           api.get('/categorias'),
+          api.get('/vendas'),
+          api.get('/movimentacoes'),
         ]);
 
         const dadosProdutos = produtosRes.data || DADOS_EXEMPLO.produtos;
         const dadosCategorias = categoriasRes.data || DADOS_EXEMPLO.categorias;
+        const vendasRes = (await api.get('/vendas')).data || [];
+        const movsRes = (await api.get('/movimentacoes')).data || [];
 
         const valorTotal = dadosProdutos.reduce((sum: number, p: any) => 
           sum + (p.preco_unitario || p.preco || 0) * (p.quantidade_disponivel || p.quantidade || 0), 0
@@ -57,6 +66,25 @@ const Dashboard: React.FC = () => {
           valorTotal: valorTotal,
         });
         setUltimosProdutos(dadosProdutos.slice(0, 8));
+
+        // montar dados do gráfico de vendas (últimos 7 dias)
+        const last7: string[] = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          last7.push(d.toLocaleDateString('pt-BR'));
+        }
+        const salesByDay = last7.map(day => {
+          const sum = (vendasRes || []).filter((v: any) => v.data && new Date(v.data).toLocaleDateString('pt-BR') === day).reduce((s: number, v: any) => s + (v.valor_total || 0), 0);
+          return sum;
+        });
+        setSalesLabels(last7);
+        setSalesData(salesByDay);
+
+        // movimentações por tipo
+        const entradas = (movsRes || []).filter((m: any) => m.tipo === 'ENTRADA').reduce((s: number, m: any) => s + (m.quantidade || 0), 0);
+        const retiradas = (movsRes || []).filter((m: any) => m.tipo === 'RETIRADA').reduce((s: number, m: any) => s + (m.quantidade || 0), 0);
+        setMovData([entradas, retiradas]);
       } catch (error) {
         const valorTotal = DADOS_EXEMPLO.produtos.reduce((sum, p) => sum + p.preco * p.quantidade, 0);
         setStats({
@@ -67,6 +95,16 @@ const Dashboard: React.FC = () => {
           valorTotal: valorTotal,
         });
         setUltimosProdutos(DADOS_EXEMPLO.produtos);
+        // fallback chart data from exemplo
+        const last7: string[] = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          last7.push(d.toLocaleDateString('pt-BR'));
+        }
+        setSalesLabels(last7);
+        setSalesData([100,200,150,300,120,90,80]);
+        setMovData([120,80]);
       } finally {
         setLoading(false);
       }
@@ -116,6 +154,17 @@ const Dashboard: React.FC = () => {
             <p style={styles.cardTitle}>{card.title}</p>
           </div>
         ))}
+      </div>
+
+      <div style={{display:'grid', gridTemplateColumns: '1fr 360px', gap: '1rem', marginBottom: '1.5rem'}}>
+        <div style={{background:'#120f20', padding:16, borderRadius:12}}>
+          <h3 style={{marginTop:0}}>Vendas (últimos 7 dias)</h3>
+          <SimpleChart data={salesData} labels={salesLabels} />
+        </div>
+        <div style={{background:'#120f20', padding:16, borderRadius:12}}>
+          <h3 style={{marginTop:0}}>Movimentações</h3>
+          <SimpleChart data={movData} labels={movLabels} />
+        </div>
       </div>
 
       <div style={styles.tableContainer}>

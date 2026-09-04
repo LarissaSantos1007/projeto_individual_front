@@ -7,6 +7,7 @@ import CategoriaPage from './pages/CategoriaPage';
 import ProdutoPage from './pages/ProdutoPage';
 import MovimentacaoPage from './pages/MovimentacaoPage';
 import VendaPage from './pages/VendaPage';
+import RelatoriosPage from './pages/RelatoriosPage';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -23,6 +24,8 @@ function App() {
         return <MovimentacaoPage />;
       case 'vendas':
         return <VendaPage />;
+      case 'relatorios':
+        return <RelatoriosPage />;
       default:
         return <Dashboard />;
     }

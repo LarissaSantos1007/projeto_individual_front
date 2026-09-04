@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { api } from '../api/api';
+import { toCSV, downloadCSV } from '../utils/exportCsv';
 
 interface Venda {
   id_venda?: number;
@@ -52,6 +53,11 @@ const VendaPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<Venda | null>(null);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8;
   const [formData, setFormData] = useState({
     id_movimentacao: 0,
     preco_unitario_praticado: 0,
@@ -129,31 +135,44 @@ const VendaPage: React.FC = () => {
     setIsSubmitting(true);
 
     const mov = movimentacoes.find(m => m.id_movimentacao === formData.id_movimentacao);
-    const novoId = vendas.length > 0 ? Math.max(...vendas.map(v => v.id_venda || 0)) + 1 : 1;
-    const novaVenda = {
-      id_venda: novoId,
-      id_movimentacao: formData.id_movimentacao,
-      preco_unitario_praticado: formData.preco_unitario_praticado,
-      quantidade: formData.quantidade,
-      valor_total: formData.valor_total,
-      produto_nome: mov?.produto_nome || 'N/A',
-      data: new Date().toISOString(),
-    };
-    const novasVendas = [...vendas, novaVenda].sort((a, b) => (a.id_venda || 0) - (b.id_venda || 0));
-    setVendas(novasVendas);
-    toast.success('Venda registrada! 💰');
+
+    if (editing) {
+      const updated: Venda = { ...editing, ...formData, produto_nome: mov?.produto_nome || editing.produto_nome, data: new Date().toISOString() };
+      setVendas(vendas.map(v => v.id_venda === editing.id_venda ? updated : v));
+      toast.success('Venda atualizada! ✅');
+      try {
+        await api.put(`/vendas/${editing.id_venda}`, formData);
+        await loadData();
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao atualizar venda!');
+      }
+      setEditing(null);
+    } else {
+      const novoId = vendas.length > 0 ? Math.max(...vendas.map(v => v.id_venda || 0)) + 1 : 1;
+      const novaVenda = {
+        id_venda: novoId,
+        id_movimentacao: formData.id_movimentacao,
+        preco_unitario_praticado: formData.preco_unitario_praticado,
+        quantidade: formData.quantidade,
+        valor_total: formData.valor_total,
+        produto_nome: mov?.produto_nome || 'N/A',
+        data: new Date().toISOString(),
+      };
+      const novasVendas = [...vendas, novaVenda].sort((a, b) => (a.id_venda || 0) - (b.id_venda || 0));
+      setVendas(novasVendas);
+      toast.success('Venda registrada! 💰');
+      try {
+        await api.post('/vendas', formData);
+        await loadData();
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao registrar venda!');
+      }
+    }
 
     setShowForm(false);
     setFormData({ id_movimentacao: 0, preco_unitario_praticado: 0, quantidade: 0, valor_total: 0 });
     setErrors({});
     setIsSubmitting(false);
-
-    try {
-      await api.post('/vendas', formData);
-      await loadData();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Erro ao registrar venda!');
-    }
   };
 
   const handleCancel = () => {
@@ -162,10 +181,21 @@ const VendaPage: React.FC = () => {
     setErrors({});
   };
 
-  const filteredVendas = vendas.filter(v =>
-    v.produto_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.id_venda?.toString().includes(searchTerm)
-  );
+  const handleEdit = (v: Venda) => {
+    setEditing(v);
+    setFormData({ id_movimentacao: v.id_movimentacao, preco_unitario_praticado: v.preco_unitario_praticado, quantidade: v.quantidade, valor_total: v.valor_total });
+    setShowForm(true);
+  };
+
+  const filteredVendas = vendas.filter(v => {
+    const matchesSearch = v.produto_nome?.toLowerCase().includes(searchTerm.toLowerCase()) || v.id_venda?.toString().includes(searchTerm);
+    if (!startDate && !endDate) return matchesSearch;
+    const d = v.data ? new Date(v.data) : null;
+    if (!d) return false;
+    if (startDate && d < new Date(startDate)) return false;
+    if (endDate && d > new Date(endDate)) return false;
+    return matchesSearch;
+  });
 
   const totalVendas = filteredVendas.reduce((sum, v) => sum + v.valor_total, 0);
 
@@ -180,9 +210,15 @@ const VendaPage: React.FC = () => {
         </div>
         <div style={styles.headerRight}>
           <span style={styles.headerBadge}>💰 Total: R$ {totalVendas.toFixed(2)}</span>
-          <button style={styles.btnPrimary} onClick={() => setShowForm(!showForm)}>
-            {showForm ? '✕ Cancelar' : '➕ Nova Venda'}
-          </button>
+          <div style={{display:'flex', gap:8}}>
+            <button style={styles.btnPrimary} onClick={() => setShowForm(!showForm)}>
+              {showForm ? '✕ Cancelar' : '➕ Nova Venda'}
+            </button>
+            <button style={styles.btnSecondary} onClick={() => {
+              const csv = toCSV(filteredVendas, ['id_venda','produto_nome','quantidade','preco_unitario_praticado','valor_total','data']);
+              downloadCSV('vendas_export.csv', csv);
+            }}>📤 Exportar CSV</button>
+          </div>
         </div>
       </div>
 
@@ -194,7 +230,11 @@ const VendaPage: React.FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           style={styles.searchInput}
         />
-        <span style={styles.searchResult}>{filteredVendas.length} resultados</span>
+        <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+          <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }} style={{...styles.input, padding: '0.5rem'}} />
+          <input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }} style={{...styles.input, padding: '0.5rem'}} />
+          <span style={styles.searchResult}>{filteredVendas.length} resultados</span>
+        </div>
       </div>
 
       <div style={styles.resumo}>
@@ -327,10 +367,11 @@ const VendaPage: React.FC = () => {
               <th style={styles.th}>Quantidade</th>
               <th style={styles.th}>Valor Total</th>
               <th style={styles.th}>Data</th>
+              <th style={styles.th}>Ações</th>
             </tr>
           </thead>
           <tbody>
-            {filteredVendas.map((v) => (
+            {filteredVendas.slice((currentPage-1)*pageSize, currentPage*pageSize).map((v) => (
               <tr key={v.id_venda}>
                 <td style={styles.td}>{v.id_venda}</td>
                 <td style={styles.td}><strong>{v.produto_nome || 'N/A'}</strong></td>
@@ -338,6 +379,11 @@ const VendaPage: React.FC = () => {
                 <td style={styles.td}>{v.quantidade}</td>
                 <td style={{ ...styles.td, color: '#6c5ce7', fontWeight: 700 }}>R$ {v.valor_total.toFixed(2)}</td>
                 <td style={styles.td}>{v.data ? new Date(v.data).toLocaleDateString('pt-BR') : '-'}</td>
+                <td style={styles.td}>
+                  <div style={{display: 'flex', gap: '0.5rem'}}>
+                    <button onClick={() => handleEdit(v)} style={styles.btnSecondary}>✏️ Editar</button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -346,9 +392,20 @@ const VendaPage: React.FC = () => {
               <td style={styles.footerText} colSpan={4}>TOTAL:</td>
               <td style={styles.footerTotal}>R$ {totalVendas.toFixed(2)}</td>
               <td style={styles.td}></td>
+              <td style={styles.td}></td>
             </tr>
           </tfoot>
         </table>
+        {filteredVendas.length === 0 && <p style={styles.empty}>Nenhuma venda encontrada.</p>}
+
+        {/* Paginação simples */}
+        {filteredVendas.length > pageSize && (
+          <div style={{display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem'}}>
+            {Array.from({length: Math.ceil(filteredVendas.length / pageSize)}, (_, i) => i + 1).map(p => (
+              <button key={p} onClick={() => setCurrentPage(p)} style={{padding: '0.4rem 0.7rem', borderRadius: 6, backgroundColor: p === currentPage ? '#6c5ce7' : 'transparent', color: p === currentPage ? '#fff' : '#d0d0e0', border: '1px solid rgba(255,255,255,0.04)'}}>{p}</button>
+            ))}
+          </div>
+        )}
         {filteredVendas.length === 0 && <p style={styles.empty}>Nenhuma venda encontrada.</p>}
       </div>
     </div>

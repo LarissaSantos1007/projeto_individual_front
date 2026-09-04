@@ -7,20 +7,13 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
-    { id: 'dashboard', label: 'Início' },
-    { id: 'categorias', label: 'Categorias' },
-    { id: 'produtos', label: 'Produtos' },
-    { id: 'movimentacoes', label: 'Movimentações' },
-    { id: 'vendas', label: 'Vendas' },
+    { id: 'dashboard', label: '📊 Início' },
+    { id: 'categorias', label: '📂 Categorias' },
+    { id: 'produtos', label: '📦 Produtos' },
+    { id: 'movimentacoes', label: '🔄 Movimentações' },
+    { id: 'vendas', label: '💰 Vendas' },
+    { id: 'relatorios', label: '📈 Relatórios' },
   ];
-
-  const icons = {
-    dashboard: '📊',
-    categorias: '📂',
-    produtos: '📦',
-    movimentacoes: '🔄',
-    vendas: '💰',
-  };
 
   return (
     <nav style={styles.nav}>
@@ -39,8 +32,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 ...(activeTab === tab.id ? styles.tabActive : {}),
               }}
             >
-              <span style={styles.tabIcon}>{icons[tab.id as keyof typeof icons]}</span>
-              <span style={styles.tabLabel}>{tab.label}</span>
+              {tab.label}
             </button>
           ))}
         </div>
@@ -108,13 +100,6 @@ const styles = {
     color: '#fd79a8',
     boxShadow: '0 0 30px rgba(253,121,168,0.05)',
     border: '1px solid rgba(253,121,168,0.15)',
-  },
-  tabIcon: {
-    fontSize: '1.1rem',
-  },
-  tabLabel: {
-    fontSize: '0.9rem',
-    fontWeight: 500,
   },
 };
 

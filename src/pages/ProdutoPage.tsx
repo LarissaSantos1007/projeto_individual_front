@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { api } from '../api/api';
+import { toCSV, downloadCSV } from '../utils/exportCsv';
 
 interface Produto {
   id_produto?: number;
@@ -232,9 +233,15 @@ const ProdutoPage: React.FC = () => {
     <div>
       <div style={styles.header}>
         <h1 style={styles.title}>📦 Produtos</h1>
-        <button style={styles.btnPrimary} onClick={() => { setShowForm(true); setEditing(null); setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' }); setErrors({}); }}>
-          ➕ Novo Produto
-        </button>
+        <div style={{display:'flex', gap:8}}>
+          <button style={styles.btnPrimary} onClick={() => { setShowForm(true); setEditing(null); setFormData({ codigo: '', nome: '', descricao: '', id_categoria: 0, preco_unitario: 0, quantidade_disponivel: 0, quantidade_minima: 0, status: 'ATIVO' }); setErrors({}); }}>
+            ➕ Novo Produto
+          </button>
+          <button style={styles.btnSecondary} onClick={() => {
+            const csv = toCSV(filteredProdutos, ['id_produto','codigo','nome','preco_unitario','quantidade_disponivel','quantidade_minima','status']);
+            downloadCSV('produtos_export.csv', csv);
+          }}>📤 Exportar CSV</button>
+        </div>
       </div>
 
       <div style={styles.filterBar}>
