@@ -50,27 +50,40 @@ interface Categoria {
 
 const CategoriaPage = () => {
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
   const [openModal, setOpenModal] = useState(false);
-  
-  // ✅ ESTADO COM CATEGORIAS - ATUALIZÁVEL
+
+  // ✅ APENAS CATEGORIAS DE TECNOLOGIA (TI)
   const [categorias, setCategorias] = useState<Categoria[]>([
-    { id: 1, nome: 'Eletrônicos', descricao: 'Produtos eletrônicos em geral', ativo: true, totalProdutos: 45, vendasMes: 120 },
-    { id: 2, nome: 'Roupas', descricao: 'Vestuário e acessórios', ativo: true, totalProdutos: 32, vendasMes: 85 },
-    { id: 3, nome: 'Alimentos', descricao: 'Produtos alimentícios', ativo: false, totalProdutos: 28, vendasMes: 60 },
-    { id: 4, nome: 'Móveis', descricao: 'Móveis e decoração', ativo: true, totalProdutos: 18, vendasMes: 42 },
-    { id: 5, nome: 'Livros', descricao: 'Livros e materiais educativos', ativo: true, totalProdutos: 12, vendasMes: 35 },
+    { id: 1, nome: 'Smartphones', descricao: 'Celulares e dispositivos móveis', ativo: true, totalProdutos: 45, vendasMes: 120 },
+    { id: 2, nome: 'Notebooks', descricao: 'Computadores portáteis', ativo: true, totalProdutos: 32, vendasMes: 85 },
+    { id: 3, nome: 'Monitores', descricao: 'Telas e displays para computador', ativo: true, totalProdutos: 28, vendasMes: 60 },
+    { id: 4, nome: 'Periféricos', descricao: 'Teclados, mouses e acessórios', ativo: true, totalProdutos: 38, vendasMes: 95 },
+    { id: 5, nome: 'Armazenamento', descricao: 'SSDs, HDs e memórias', ativo: true, totalProdutos: 22, vendasMes: 50 },
+    { id: 6, nome: 'Placas de Vídeo', descricao: 'GPUs para computadores', ativo: true, totalProdutos: 15, vendasMes: 35 },
+    { id: 7, nome: 'Processadores', descricao: 'CPUs para computadores', ativo: false, totalProdutos: 12, vendasMes: 28 },
+    { id: 8, nome: 'Placas-Mãe', descricao: 'Motherboards para PCs', ativo: true, totalProdutos: 18, vendasMes: 42 },
+    { id: 9, nome: 'Gabinetes', descricao: 'Gabinetes para computadores', ativo: true, totalProdutos: 10, vendasMes: 22 },
+    { id: 10, nome: 'Fontes', descricao: 'Fontes de alimentação', ativo: true, totalProdutos: 8, vendasMes: 18 },
   ]);
 
   const [novaCategoria, setNovaCategoria] = useState({ nome: '', descricao: '' });
+
+  const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const gerarId = () => {
     if (categorias.length === 0) return 1;
     return Math.max(...categorias.map(c => c.id)) + 1;
   };
 
-  // ✅ SALVAR CATEGORIA
   const handleSaveCategoria = () => {
     if (!novaCategoria.nome) {
       showError('Preencha o nome da categoria!');
@@ -89,7 +102,6 @@ const CategoriaPage = () => {
     handleCloseModal();
   };
 
-  // ✅ EXCLUIR CATEGORIA
   const handleDeleteCategoria = (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir esta categoria?')) {
       setCategorias(categorias.filter(c => c.id !== id));
@@ -97,19 +109,12 @@ const CategoriaPage = () => {
     }
   };
 
-  // ✅ ALTERNAR STATUS
   const handleToggleStatus = (id: number) => {
     setCategorias(categorias.map(c => 
       c.id === id ? { ...c, ativo: !c.ativo } : c
     ));
     const categoria = categorias.find(c => c.id === id);
     showSuccess(`Status da categoria "${categoria?.nome}" alterado!`);
-  };
-
-  const handleChangePage = (event: unknown, newPage: number) => setPage(newPage);
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
   };
 
   const handleOpenModal = () => setOpenModal(true);
@@ -123,6 +128,10 @@ const CategoriaPage = () => {
     c.descricao.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const startIndex = page * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = filteredCategorias.slice(startIndex, endIndex);
+
   const totalCategorias = categorias.length;
   const categoriasAtivas = categorias.filter(c => c.ativo).length;
   const totalProdutos = categorias.reduce((sum, c) => sum + c.totalProdutos, 0);
@@ -130,13 +139,13 @@ const CategoriaPage = () => {
 
   return (
     <PageWrapper>
-      <Typography variant="h4" sx={{ color: 'white', fontWeight: 700, mb: 3 }}>📂 Categorias</Typography>
+      <Typography variant="h4" sx={{ color: 'white', fontWeight: 700, mb: 3 }}>📂 Categorias de TI</Typography>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4 }}>
             <CardContent>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Total</Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Total de Categorias</Typography>
               <Typography variant="h5" sx={{ color: 'white', fontWeight: 700 }}>{totalCategorias}</Typography>
             </CardContent>
           </Card>
@@ -144,7 +153,7 @@ const CategoriaPage = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4 }}>
             <CardContent>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Ativas</Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Categorias Ativas</Typography>
               <Typography variant="h5" sx={{ color: '#38ef7d', fontWeight: 700 }}>{categoriasAtivas}</Typography>
             </CardContent>
           </Card>
@@ -152,7 +161,7 @@ const CategoriaPage = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4 }}>
             <CardContent>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Produtos</Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Total de Produtos</Typography>
               <Typography variant="h5" sx={{ color: '#4facfe', fontWeight: 700 }}>{totalProdutos}</Typography>
             </CardContent>
           </Card>
@@ -160,7 +169,7 @@ const CategoriaPage = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4 }}>
             <CardContent>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Vendas/Mês</Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>Vendas do Mês</Typography>
               <Typography variant="h5" sx={{ color: '#f093fb', fontWeight: 700 }}>{totalVendas}</Typography>
             </CardContent>
           </Card>
@@ -168,7 +177,14 @@ const CategoriaPage = () => {
       </Grid>
 
       <Paper sx={{ p: 2, mb: 3, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        <TextField placeholder="Buscar categoria..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} sx={{ flex: 1, minWidth: 200, '& .MuiInputBase-root': { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' }, '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' } } }} slotProps={{ input: { startAdornment: <InputAdornment position="start"><Search sx={{ color: 'rgba(255,255,255,0.5)' }} /></InputAdornment> } }} />
+        <TextField 
+          placeholder="Buscar categoria..." 
+          size="small" 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)} 
+          sx={{ flex: 1, minWidth: 200, '& .MuiInputBase-root': { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' }, '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' } } }} 
+          slotProps={{ input: { startAdornment: <InputAdornment position="start"><Search sx={{ color: 'rgba(255,255,255,0.5)' }} /></InputAdornment> } }} 
+        />
         <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
           <Button variant="contained" startIcon={<Add />} onClick={handleOpenModal} sx={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', '&:hover': { background: 'linear-gradient(135deg, #5a67d8, #6b3fa0)' } }}>Nova Categoria</Button>
           <Tooltip title="Filtrar"><IconButton sx={{ color: 'rgba(255,255,255,0.5)' }}><FilterList /></IconButton></Tooltip>
@@ -183,16 +199,16 @@ const CategoriaPage = () => {
             <TableHead>
               <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
                 <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>ID</TableCell>
-                <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Nome</TableCell>
+                <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Categoria</TableCell>
                 <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Descrição</TableCell>
                 <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }} align="center">Produtos</TableCell>
-                <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }} align="center">Vendas/Mês</TableCell>
+                <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }} align="center">Vendas</TableCell>
                 <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }} align="center">Status</TableCell>
                 <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }} align="center">Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredCategorias.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((categoria) => (
+              {paginatedData.map((categoria) => (
                 <TableRow key={categoria.id} sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' } }}>
                   <TableCell sx={{ color: 'white' }}>{categoria.id}</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 500 }}>{categoria.nome}</TableCell>
@@ -200,19 +216,53 @@ const CategoriaPage = () => {
                   <TableCell align="center"><Chip label={categoria.totalProdutos} size="small" sx={{ bgcolor: 'rgba(79, 172, 254, 0.2)', color: '#4facfe', fontWeight: 600 }} /></TableCell>
                   <TableCell align="center"><Chip label={categoria.vendasMes} size="small" sx={{ bgcolor: 'rgba(240, 147, 251, 0.2)', color: '#f093fb', fontWeight: 600 }} /></TableCell>
                   <TableCell align="center">
-                    <Chip label={categoria.ativo ? '✅ Ativo' : '❌ Inativo'} size="small" sx={{ bgcolor: categoria.ativo ? 'rgba(17, 153, 142, 0.3)' : 'rgba(245, 87, 108, 0.3)', color: categoria.ativo ? '#38ef7d' : '#f5576c', border: `1px solid ${categoria.ativo ? 'rgba(17, 153, 142, 0.2)' : 'rgba(245, 87, 108, 0.2)'}`, cursor: 'pointer' }} onClick={() => handleToggleStatus(categoria.id)} />
+                    <Chip 
+                      label={categoria.ativo ? '✅ Ativo' : '❌ Inativo'} 
+                      size="small" 
+                      sx={{ 
+                        bgcolor: categoria.ativo ? 'rgba(17, 153, 142, 0.3)' : 'rgba(245, 87, 108, 0.3)', 
+                        color: categoria.ativo ? '#38ef7d' : '#f5576c', 
+                        border: `1px solid ${categoria.ativo ? 'rgba(17, 153, 142, 0.2)' : 'rgba(245, 87, 108, 0.2)'}`,
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => handleToggleStatus(categoria.id)}
+                    />
                   </TableCell>
                   <TableCell align="center">
                     <Tooltip title="Visualizar"><IconButton size="small" sx={{ color: '#667eea' }}><Visibility fontSize="small" /></IconButton></Tooltip>
                     <Tooltip title="Editar"><IconButton size="small" sx={{ color: '#4facfe' }}><Edit fontSize="small" /></IconButton></Tooltip>
-                    <Tooltip title="Excluir"><IconButton size="small" sx={{ color: '#f5576c' }} onClick={() => handleDeleteCategoria(categoria.id)}><Delete fontSize="small" /></IconButton></Tooltip>
+                    <Tooltip title="Excluir">
+                      <IconButton size="small" sx={{ color: '#f5576c' }} onClick={() => handleDeleteCategoria(categoria.id)}>
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination rowsPerPageOptions={[5, 10, 25]} component="div" count={filteredCategorias.length} rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Itens por página" sx={{ color: 'rgba(255,255,255,0.5)', '& .MuiTablePagination-select': { color: 'white' }, '& .MuiTablePagination-selectIcon': { color: 'rgba(255,255,255,0.5)' } }} />
+        
+        <TablePagination 
+          rowsPerPageOptions={[5, 10, 25, 50]} 
+          component="div" 
+          count={filteredCategorias.length} 
+          rowsPerPage={rowsPerPage} 
+          page={page} 
+          onPageChange={handleChangePage} 
+          onRowsPerPageChange={handleChangeRowsPerPage} 
+          labelRowsPerPage="Itens por página"
+          labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+          sx={{ 
+            color: 'rgba(255,255,255,0.5)',
+            '& .MuiTablePagination-select': { color: 'white' },
+            '& .MuiTablePagination-selectIcon': { color: 'rgba(255,255,255,0.5)' },
+            '& .MuiTablePagination-actions .MuiIconButton-root': { 
+              color: 'rgba(255,255,255,0.5)',
+              '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' }
+            }
+          }} 
+        />
       </Paper>
 
       <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>

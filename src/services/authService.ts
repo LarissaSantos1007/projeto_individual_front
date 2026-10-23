@@ -86,7 +86,7 @@ class AuthService {
 
   private handleError(error: any): Error {
     if (error.response) {
-      const message = error.response.data?.message || 'Erro ao fazer login';
+      const message = error.response.data?.message || error.response.data?.mensagem || 'Erro ao fazer login';
       const status = error.response.status;
       
       if (status === 401) {

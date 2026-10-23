@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import AuthService from '../services/authService';
 
 interface AuthContextType {
@@ -13,13 +13,18 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<{ email: string; nome: string; perfis: string[] } | null>(null);
+  const [user, setUser] = useState<{ email: string; nome: string; perfis: string[] } | null>(() => {
+    const storedUser = sessionStorage.getItem('user');
+    if (!storedUser) return null;
+    try {
+      return JSON.parse(storedUser);
+    } catch {
+      sessionStorage.removeItem('user');
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(false);
   const authService = AuthService.getInstance();
-
-  useEffect(() => {
-    setLoading(false);
-  }, []);
 
   const login = async (email: string, senha: string) => {
     setLoading(true);
