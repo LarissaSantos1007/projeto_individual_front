@@ -10,6 +10,8 @@ export interface Produto {
   data_atualizacao?: Date;
 }
 
+export type ProdutoDTO = Omit<Produto, 'id'>;
+
 export interface Categoria {
   id: number;
   nome: string;

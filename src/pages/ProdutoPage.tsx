@@ -55,11 +55,10 @@ interface Produto {
 
 const ProdutoPage = () => {
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
   const [openModal, setOpenModal] = useState(false);
-  
-  // ✅ ESTADO COM PRODUTOS - ATUALIZÁVEL
+
   const [produtos, setProdutos] = useState<Produto[]>([
     { id: 1, nome: 'Smartphone Pro', categoria: 'Eletrônicos', preco: 2999.99, estoque: 12, status: 'ok', vendas: 45, avaliacao: 4.8 },
     { id: 2, nome: 'Notebook Ultra', categoria: 'Eletrônicos', preco: 4599.99, estoque: 5, status: 'critico', vendas: 29, avaliacao: 4.9 },
@@ -67,6 +66,8 @@ const ProdutoPage = () => {
     { id: 4, nome: 'Fone Bluetooth', categoria: 'Acessórios', preco: 199.90, estoque: 23, status: 'ok', vendas: 25, avaliacao: 4.2 },
     { id: 5, nome: 'Monitor 4K', categoria: 'Eletrônicos', preco: 1299.99, estoque: 3, status: 'critico', vendas: 18, avaliacao: 4.3 },
     { id: 6, nome: 'Teclado Mecânico', categoria: 'Acessórios', preco: 349.90, estoque: 15, status: 'baixo', vendas: 32, avaliacao: 4.0 },
+    { id: 7, nome: 'Mouse Gamer', categoria: 'Acessórios', preco: 129.90, estoque: 20, status: 'ok', vendas: 22, avaliacao: 4.1 },
+    { id: 8, nome: 'Smartwatch', categoria: 'Eletrônicos', preco: 799.99, estoque: 7, status: 'baixo', vendas: 15, avaliacao: 4.4 },
   ]);
 
   const [novoProduto, setNovoProduto] = useState({
@@ -76,12 +77,20 @@ const ProdutoPage = () => {
     estoque: ''
   });
 
+  const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   const gerarId = () => {
     if (produtos.length === 0) return 1;
     return Math.max(...produtos.map(p => p.id)) + 1;
   };
 
-  // ✅ SALVAR PRODUTO
   const handleSaveProduto = () => {
     if (!novoProduto.nome || !novoProduto.preco) {
       showError('Preencha todos os campos obrigatórios!');
@@ -102,18 +111,11 @@ const ProdutoPage = () => {
     handleCloseModal();
   };
 
-  // ✅ EXCLUIR PRODUTO
   const handleDeleteProduto = (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir este produto?')) {
       setProdutos(produtos.filter(p => p.id !== id));
       showSuccess('🗑️ Produto excluído com sucesso!');
     }
-  };
-
-  const handleChangePage = (event: unknown, newPage: number) => setPage(newPage);
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
   };
 
   const handleOpenModal = () => setOpenModal(true);
@@ -135,6 +137,10 @@ const ProdutoPage = () => {
     p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
     p.categoria.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const startIndex = page * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = filteredProdutos.slice(startIndex, endIndex);
 
   const totalEstoque = produtos.reduce((sum, p) => sum + p.estoque, 0);
   const totalVendas = produtos.reduce((sum, p) => sum + p.vendas, 0);
@@ -195,7 +201,7 @@ const ProdutoPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredProdutos.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((produto) => {
+              {paginatedData.map((produto) => {
                 const status = getStatusColor(produto.status);
                 const percentual = Math.min((produto.estoque / 50) * 100, 100);
                 return (
@@ -229,7 +235,27 @@ const ProdutoPage = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination rowsPerPageOptions={[5, 10, 25]} component="div" count={filteredProdutos.length} rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Itens por página" sx={{ color: 'rgba(255,255,255,0.5)', '& .MuiTablePagination-select': { color: 'white' }, '& .MuiTablePagination-selectIcon': { color: 'rgba(255,255,255,0.5)' } }} />
+        
+        <TablePagination 
+          rowsPerPageOptions={[5, 10, 25, 50]} 
+          component="div" 
+          count={filteredProdutos.length} 
+          rowsPerPage={rowsPerPage} 
+          page={page} 
+          onPageChange={handleChangePage} 
+          onRowsPerPageChange={handleChangeRowsPerPage} 
+          labelRowsPerPage="Itens por página"
+          labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+          sx={{ 
+            color: 'rgba(255,255,255,0.5)',
+            '& .MuiTablePagination-select': { color: 'white' },
+            '& .MuiTablePagination-selectIcon': { color: 'rgba(255,255,255,0.5)' },
+            '& .MuiTablePagination-actions .MuiIconButton-root': { 
+              color: 'rgba(255,255,255,0.5)',
+              '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' }
+            }
+          }} 
+        />
       </Paper>
 
       <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>

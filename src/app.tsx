@@ -37,11 +37,9 @@ function App() {
           <Navbar />
           
           <Routes>
-            {/* Rotas públicas */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/cadastro" element={<CadastroPage />} />
             
-            {/* Rotas protegidas */}
             <Route path="/" element={
               <ProtectedRoute>
                 <Dashboard />

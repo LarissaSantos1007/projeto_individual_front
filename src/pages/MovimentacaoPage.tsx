@@ -55,13 +55,12 @@ interface Movimentacao {
 
 const MovimentacaoPage = () => {
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFilter, setTipoFilter] = useState('todos');
   const [openModal, setOpenModal] = useState(false);
   const [tipoMovimentacao, setTipoMovimentacao] = useState<'ENTRADA' | 'SAIDA'>('ENTRADA');
-  
-  // ✅ ESTADO COM MOVIMENTAÇÕES - ATUALIZÁVEL
+
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([
     { id: 1, produto: 'Smartphone Pro', tipo: 'ENTRADA', quantidade: 10, data: '15/01/2024 14:30', usuario: 'Admin', observacao: 'Compra do fornecedor' },
     { id: 2, produto: 'Notebook Ultra', tipo: 'SAIDA', quantidade: 2, data: '16/01/2024 10:15', usuario: 'Admin', observacao: 'Venda para cliente' },
@@ -69,6 +68,8 @@ const MovimentacaoPage = () => {
     { id: 4, produto: 'Fone Bluetooth', tipo: 'SAIDA', quantidade: 5, data: '18/01/2024 16:45', usuario: 'Admin', observacao: 'Venda' },
     { id: 5, produto: 'Monitor 4K', tipo: 'ENTRADA', quantidade: 3, data: '19/01/2024 11:20', usuario: 'Admin', observacao: 'Reposição' },
     { id: 6, produto: 'Teclado Mecânico', tipo: 'SAIDA', quantidade: 8, data: '20/01/2024 08:30', usuario: 'Admin', observacao: 'Venda' },
+    { id: 7, produto: 'Mouse Gamer', tipo: 'ENTRADA', quantidade: 20, data: '21/01/2024 13:00', usuario: 'Admin', observacao: 'Reabastecimento' },
+    { id: 8, produto: 'Smartwatch', tipo: 'SAIDA', quantidade: 3, data: '22/01/2024 15:30', usuario: 'Admin', observacao: 'Venda' },
   ]);
 
   const [novaMovimentacao, setNovaMovimentacao] = useState({
@@ -77,12 +78,20 @@ const MovimentacaoPage = () => {
     observacao: ''
   });
 
+  const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   const gerarId = () => {
     if (movimentacoes.length === 0) return 1;
     return Math.max(...movimentacoes.map(m => m.id)) + 1;
   };
 
-  // ✅ SALVAR MOVIMENTAÇÃO
   const handleSaveMovimentacao = () => {
     if (!novaMovimentacao.produto || !novaMovimentacao.quantidade) {
       showError('Preencha todos os campos obrigatórios!');
@@ -112,18 +121,11 @@ const MovimentacaoPage = () => {
     setOpenModal(false);
   };
 
-  // ✅ EXCLUIR MOVIMENTAÇÃO
   const handleDeleteMovimentacao = (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir esta movimentação?')) {
       setMovimentacoes(movimentacoes.filter(m => m.id !== id));
       showSuccess('🗑️ Movimentação excluída com sucesso!');
     }
-  };
-
-  const handleChangePage = (event: unknown, newPage: number) => setPage(newPage);
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
   };
 
   const handleOpenModal = (tipo: 'ENTRADA' | 'SAIDA') => {
@@ -141,6 +143,10 @@ const MovimentacaoPage = () => {
     const matchTipo = tipoFilter === 'todos' || mov.tipo === tipoFilter;
     return matchSearch && matchTipo;
   });
+
+  const startIndex = page * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = filteredMovimentacoes.slice(startIndex, endIndex);
 
   const totalMovimentacoes = movimentacoes.length;
   const totalEntradas = movimentacoes.filter(m => m.tipo === 'ENTRADA').length;
@@ -213,7 +219,7 @@ const MovimentacaoPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredMovimentacoes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((mov) => (
+              {paginatedData.map((mov) => (
                 <TableRow key={mov.id} sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' } }}>
                   <TableCell sx={{ color: 'white' }}>{mov.id}</TableCell>
                   <TableCell sx={{ color: 'white' }}>{mov.produto}</TableCell>
@@ -232,7 +238,27 @@ const MovimentacaoPage = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination rowsPerPageOptions={[5, 10, 25]} component="div" count={filteredMovimentacoes.length} rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Itens por página" sx={{ color: 'rgba(255,255,255,0.5)', '& .MuiTablePagination-select': { color: 'white' }, '& .MuiTablePagination-selectIcon': { color: 'rgba(255,255,255,0.5)' } }} />
+        
+        <TablePagination 
+          rowsPerPageOptions={[5, 10, 25, 50]} 
+          component="div" 
+          count={filteredMovimentacoes.length} 
+          rowsPerPage={rowsPerPage} 
+          page={page} 
+          onPageChange={handleChangePage} 
+          onRowsPerPageChange={handleChangeRowsPerPage} 
+          labelRowsPerPage="Itens por página"
+          labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+          sx={{ 
+            color: 'rgba(255,255,255,0.5)',
+            '& .MuiTablePagination-select': { color: 'white' },
+            '& .MuiTablePagination-selectIcon': { color: 'rgba(255,255,255,0.5)' },
+            '& .MuiTablePagination-actions .MuiIconButton-root': { 
+              color: 'rgba(255,255,255,0.5)',
+              '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' }
+            }
+          }} 
+        />
       </Paper>
 
       <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
@@ -248,6 +274,8 @@ const MovimentacaoPage = () => {
             <MenuItem value="Fone Bluetooth">Fone Bluetooth</MenuItem>
             <MenuItem value="Monitor 4K">Monitor 4K</MenuItem>
             <MenuItem value="Teclado Mecânico">Teclado Mecânico</MenuItem>
+            <MenuItem value="Mouse Gamer">Mouse Gamer</MenuItem>
+            <MenuItem value="Smartwatch">Smartwatch</MenuItem>
           </TextField>
           <TextField margin="dense" label="Quantidade" fullWidth type="number" value={novaMovimentacao.quantidade} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNovaMovimentacao({ ...novaMovimentacao, quantidade: e.target.value })} sx={{ mt: 2, '& .MuiInputBase-root': { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' } }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' } }} />
           <TextField margin="dense" label="Observação" fullWidth multiline rows={2} value={novaMovimentacao.observacao} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNovaMovimentacao({ ...novaMovimentacao, observacao: e.target.value })} sx={{ mt: 2, '& .MuiInputBase-root': { color: 'white' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' } }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' } }} />
